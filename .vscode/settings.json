@@ -1,0 +1,26 @@
+{
+    "cSpell.words": [
+        "cuda",
+        "cudnn",
+        "networkx",
+        "qiskit",
+        "qlearning",
+        "sdist",
+        "setuptools",
+        "sympy",
+        "venv"
+    ],
+    "python.analysis.typeCheckingMode": "standard",
+    "autopep8.args": [
+        "--max-line-length=140"
+    ],
+    "pylint.args": [
+        "--max-line-length=140",
+        "--disable=W0511"
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
