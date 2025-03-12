@@ -1,0 +1,39 @@
+image: python:latest
+
+workflow: 
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+before_script:
+  - python --version ; pip --version
+  - pip install virtualenv
+  - virtualenv .venv
+  - source .venv/bin/activate
+  - pip install --upgrade pip
+  - pip install -r requirements-dev.txt
+
+stages:
+  - code analysis
+  - tests
+
+pylint:
+  stage: code analysis
+  script:
+    - pylint qlearning
+    - pylint examples
+    - pylint tests
+
+pytest:
+  stage: tests
+  script:
+    - pip install --editable .
+    - pytest -v tests
