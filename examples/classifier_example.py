@@ -1,10 +1,6 @@
 """ Example file """
 
 
-class TorchBoard:
-    """ TorchBoard """
-
-
 def main():
     """ Quantum classifier example """
 

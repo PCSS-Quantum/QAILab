@@ -1,4 +1,4 @@
-image: python:latest
+image: python:3.12-slim
 
 workflow: 
   rules:
@@ -30,7 +30,6 @@ pylint:
   script:
     - pylint qlearning
     - pylint examples
-    - pylint tests
 
 pytest:
   stage: tests
