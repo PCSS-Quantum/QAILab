@@ -21,13 +21,13 @@ class CircuitBlock(ABC):
 class WeightBlock(CircuitBlock, ABC):
     def __init__(self, num_qubits, name='BaseWeightBlock') -> None:
         super().__init__(num_qubits, name)
-        self.weights_pv = ParameterVector(f'weights_{self.__hash__()}', num_qubits)
+        self.weights_pv = ParameterVector(f'weights_{hex(id(super()))}', num_qubits)
 
 
 class EncodingBlock(CircuitBlock, ABC):
     def __init__(self, num_qubits, name='BaseEncodingBlock') -> None:
         super().__init__(num_qubits, name)
-        self.x_pv = ParameterVector(f'x_vector_{self.__hash__()}', num_qubits)
+        self.x_pv = ParameterVector(f'x_vector_{hex(id(super()))}', num_qubits)
 
 
 class EntanglingBlock(CircuitBlock):
