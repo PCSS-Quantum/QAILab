@@ -4,26 +4,26 @@ workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
 
-before_script:
-  - python --version ; pip --version
-  - pip install virtualenv
-  - virtualenv .venv
-  - source .venv/bin/activate
-  - pip install --upgrade pip
-  - pip install -r requirements-dev.txt
+default:
+  before_script:
+    - python --version ; pip --version
+    - pip install uv
+    - uv venv .venv
+    - source .venv/bin/activate
+    - uv pip install -r requirements.txt
+    - uv pip install -r requirements-dev.txt
+    - uv pip install --editable .
 
 stages:
-  - code analysis
-  - tests
+  - code analysis and testing
 
 pylint:
-  stage: code analysis
+  stage: code analysis and testing
   script:
     - pylint qlearning
     - pylint examples
 
 pytest:
-  stage: tests
+  stage: code analysis and testing
   script:
-    - pip install --editable .
     - pytest -v tests
