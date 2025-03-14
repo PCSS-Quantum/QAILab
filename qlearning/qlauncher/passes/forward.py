@@ -11,7 +11,7 @@ class ForwardPass(Algorithm):
     """Forward Pass"""
     _algorithm_format = 'none'
 
-    def __init__(self, shots: int) -> None:
+    def __init__(self, shots: int = 1024) -> None:
         """_summary_
         """
         self.shots = shots
@@ -22,9 +22,9 @@ class ForwardPass(Algorithm):
             raise ValueError('Formatter for Forward pass not found!')
         if not isinstance(backend, QiskitBackend):
             raise ValueError('Wrong sampler given into')
-        circuit, binding_parameters = formatter(problem)
+        pubs = formatter(problem)
         sampler = backend.sampler
-        job = sampler.run([(circuit, binding_parameters)], shots=self.shots)
+        job = sampler.run(pubs, shots=self.shots)
         result = job.result()
         data = result._pub_results[0].data['c'].array  # pylint: disable=protected-access
         distribution = defaultdict(float)

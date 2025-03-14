@@ -1,2 +1,2 @@
 # git+https://gitlab.pcss.pl/quantum/psnc-sdk/launcher.git@QL-2.0[qiskit,pilotjob]
-git+https://gitlab.pcss.pl/quantum/psnc-sdk/launcher.git@formatter-returns-default-formatter-for-unreachable[qiskit,pilotjob]
+git+https://gitlab.pcss.pl/quantum/psnc-sdk/launcher.git@formatter-returns-default-formatter-for-unreachable[qiskit,pilotjob,cirq]
