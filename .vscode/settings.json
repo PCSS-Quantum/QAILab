@@ -2,9 +2,11 @@
     "cSpell.words": [
         "cuda",
         "cudnn",
+        "httpx",
         "networkx",
         "pylint",
         "qiskit",
+        "qlauncher",
         "qlearning",
         "sdist",
         "setuptools",
