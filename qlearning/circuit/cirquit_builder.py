@@ -51,7 +51,6 @@ def build_circuit(
 
     for layer in circuit_layers:
         block = _layer_name_to_type(layer)(input_size)
-        print(block.__hash__())
         c_add(block)
 
         if isinstance(block, WeightBlock):
@@ -59,5 +58,8 @@ def build_circuit(
 
     encoding_block = _encoding_name_to_type(encoding_style)(input_size)
     c_add(encoding_block)
+
+    # TODO: add measurement blocks
+    # measurement_block = _measurement_name_to_type(measurement_style)(input_size)
 
     return circuit, weight_vectors, encoding_block.x_pv
