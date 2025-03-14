@@ -1,5 +1,7 @@
 # Linter
 pylint
+pre-commit
 
 # Testing
 pytest
+pytest_httpx
