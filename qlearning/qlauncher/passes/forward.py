@@ -5,6 +5,10 @@ from typing import Any
 from quantum_launcher.base import Algorithm
 from quantum_launcher.base.base import Backend, Problem, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qiskit.primitives.containers.primitive_result import PrimitiveResult
+from qiskit.primitives.base.sampler_result import SamplerResult
+
+from qlearning.utils import number_to_bit_tuple
 
 
 class ForwardPass(Algorithm):
@@ -26,8 +30,29 @@ class ForwardPass(Algorithm):
         sampler = backend.sampler
         job = sampler.run(pubs, shots=self.shots)
         result = job.result()
-        data = result._pub_results[0].data['c'].array  # pylint: disable=protected-access
-        distribution = defaultdict(float)
-        for i in data:
-            distribution[tuple(i)] += 1/self.shots
-        return Result('', 0, '', 0, distribution, {}, self.shots, 0, 0, data)
+        if isinstance(result, PrimitiveResult):
+            distributions = self._extract_results_v2(result)
+        elif isinstance(result, SamplerResult):
+            distributions = self._extract_results_v1(result)
+        else:
+            raise ValueError(f'Result with type: {type(result)} is not supported')
+        return Result('', 0, '', 0, distributions[0], {}, self.shots, 0, 0, result)
+
+    def _extract_results_v2(self, result: PrimitiveResult) -> list[dict]:
+        distributions = []
+        for pub in result._pub_results:  # pylint: disable=protected-access
+            data = pub.data['c'].array
+            distribution = defaultdict(float)
+            for i in data:
+                distribution[tuple(i)] += 1/self.shots
+            distributions.append(distribution)
+        return distributions
+
+    def _extract_results_v1(self, result: SamplerResult) -> list[dict]:
+        distributions = []
+        for quasi_dist in result.quasi_dists:
+            distribution = {}
+            for key, value in quasi_dist.items():
+                distribution[number_to_bit_tuple(key, quasi_dist._num_bits)] = value  # pylint: disable=protected-access
+            distributions.append(distribution)
+        return distributions

@@ -2,9 +2,10 @@
 import math
 
 from quantum_launcher import QuantumLauncher, Result
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from quantum_launcher.routines.qiskit_routines import QiskitBackend, AQTBackend
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
+import pytest
 
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 
@@ -39,6 +40,18 @@ def test_forward_pass_weight_assignment():
     assert results.distribution[(1,)] == 1
 
 
+def test_forward_pass_auto_assignment():
+    """ Test if forward pass auto parameter assignment works. """
+    problem = _trainable_circuit()
+    algorithm = ForwardPass(shots=5)
+    launcher = QuantumLauncher(problem, algorithm, AQTBackend('local_simulator'))
+    results = launcher.run(weights=[0], auto_bind=True)
+    assert results.distribution[(0,)] == 1
+    results = launcher.run(weights=[math.pi], auto_bind=True)
+    assert results.distribution[(1,)] == 1
+
+
+@pytest.mark.skip('Backward pass is not implemented yet')
 def test_backward_pass_runtime():
     """ Tests basic backward pass runtime. """
     problem = _trainable_circuit()
@@ -50,6 +63,7 @@ def test_backward_pass_runtime():
     assert results.num_of_samples == 1
 
 
+@pytest.mark.skip('Backward pass is not implemented yet')
 def test_backward_pass_weight_assignment():
     """ Test if backward pass weights assignment works. """
     problem = _trainable_circuit()

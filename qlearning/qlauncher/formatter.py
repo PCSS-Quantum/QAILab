@@ -8,7 +8,7 @@ from .problem import CircuitProblem
 
 
 @formatter(CircuitProblem, 'none')
-class _CircuitFormatter:
+class _CircuitForwardFormatter:
     """ Formatter for CircuitProblem. """
 
     def __call__(self, problem: CircuitProblem, weights: Iterable,
@@ -22,5 +22,4 @@ class _CircuitFormatter:
     def bind_params(self, problem: CircuitProblem, weights: Iterable) -> QuantumCircuit:
         """ Binding parameters """
         circuit: QuantumCircuit = deepcopy(problem.instance)
-        print(circuit.parameters)
         return circuit.assign_parameters(weights)
