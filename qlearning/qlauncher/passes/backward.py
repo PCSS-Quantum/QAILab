@@ -19,6 +19,6 @@ class BackwardPass(ForwardPass):
             raise ValueError('Formatter for Backward pass not found!')
         if not isinstance(backend, QiskitBackend):
             raise ValueError('Wrong sampler given into')
-        super().run(problem, backend)
+        forward_pass_result = super().run(problem, backend)
 
-        return Result('', 0, '', 0, {}, {}, self.shots, 0, 0, '')
+        return forward_pass_result

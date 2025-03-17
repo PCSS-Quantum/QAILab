@@ -16,7 +16,10 @@ class ForwardPass(Algorithm):
     _algorithm_format = 'none'
 
     def __init__(self, shots: int = 1024) -> None:
-        """_summary_
+        """Forward pass implementation for QLauncher.
+
+        Args:
+            shots (int): Number of shots. Defaults to 1024.
         """
         self.shots = shots
         super().__init__()
@@ -31,12 +34,12 @@ class ForwardPass(Algorithm):
         job = sampler.run(pubs, shots=self.shots)
         result = job.result()
         if isinstance(result, PrimitiveResult):
-            distributions = self._extract_results_v2(result)
+            distribution = self._extract_results_v2(result)[0]
         elif isinstance(result, SamplerResult):
-            distributions = self._extract_results_v1(result)
+            distribution = self._extract_results_v1(result)[0]
         else:
             raise ValueError(f'Result with type: {type(result)} is not supported')
-        return Result('', 0, '', 0, distributions[0], {}, self.shots, 0, 0, result)
+        return Result('', 0, '', 0, distribution, {}, self.shots, 0, 0, result)
 
     def _extract_results_v2(self, result: PrimitiveResult) -> list[dict]:
         distributions = []
