@@ -28,15 +28,15 @@ def build_circuit(
     circuit = QuantumCircuit(input_size)
     weight_vectors = []
 
+    encoding_block = encoding_style(input_size)
+    encoding_block.add_to_circuit(circuit)
+
     for layer in circuit_layers:
         block = layer(input_size)
         block.add_to_circuit(circuit)
 
         if isinstance(block, WeightBlock):
             weight_vectors.append(block.weights_pv)
-
-    encoding_block = encoding_style(input_size)
-    encoding_block.add_to_circuit(circuit)
 
     measurement_block = measurement_style(input_size)
     measurement_block.add_to_circuit(circuit)

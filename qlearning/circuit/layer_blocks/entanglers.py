@@ -1,7 +1,20 @@
+"""Different implementations of qubit entangling sections for variational circuits."""
 from qlearning.circuit.base import EntanglingBlock
 
 
 class CXEntangler(EntanglingBlock):
+    """
+                        ┌───┐
+    q_0: ──■────────────┤ X ├
+         ┌─┴─┐          └─┬─┘
+    q_1: ┤ X ├──■─────────┼──
+         └───┘┌─┴─┐       │
+    q_2: ─────┤ X ├──■────┼──
+    ..        └───┘┌─┴─┐  │
+    q_n: ──────────┤ X ├──■──
+                   └───┘
+    """
+
     def __init__(self, num_qubits) -> None:
         super().__init__(num_qubits, 'CXEntangler')
 

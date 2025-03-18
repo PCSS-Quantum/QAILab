@@ -14,7 +14,7 @@ class CircuitBlock(ABC):
     def __init__(self, num_qubits, name='unknown') -> None:
         self.num_qubits = num_qubits
         self.name = name
-        self._circuit = QuantumCircuit(num_qubits)
+        self._circuit = QuantumCircuit(num_qubits, name=self.name)
         self._build_circuit()
 
     @abstractmethod
