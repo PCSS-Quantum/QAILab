@@ -10,20 +10,33 @@ import pytest
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 
 
-def _trainable_circuit() -> CircuitProblem:
-    weight = Parameter('weight')
+def _trainable_circuit() -> tuple[CircuitProblem, list[Parameter]]:
+    input_param = Parameter('input')
+    weight = Parameter('weights')
     circuit = QuantumCircuit(1, 1)
-    circuit.rx(weight, 0)
+    circuit.rx(input_param, 0)
+    circuit.rz(weight, 0)
     circuit.measure(0, 0)
-    return CircuitProblem(circuit, 'test')
+    return CircuitProblem(circuit, 'test'), [input_param, weight]
 
 
 def test_forward_pass_runtime():
     """ Tests basic forward pass runtime. """
-    problem = _trainable_circuit()
+    problem, _ = _trainable_circuit()
     algorithm = ForwardPass(shots=1)
     launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
-    results = launcher.run(weights=[1])
+    results = launcher.run(parameters=[1, 1])
+    assert isinstance(results, Result)
+    assert isinstance(results.distribution, dict)
+    assert results.num_of_samples == 1
+
+
+def test_forward_pass_runtime_auto_bind():
+    """ Tests basic forward pass runtime. """
+    problem, _ = _trainable_circuit()
+    algorithm = ForwardPass(shots=1)
+    launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
+    results = launcher.run(parameters=[1, 1])
     assert isinstance(results, Result)
     assert isinstance(results.distribution, dict)
     assert results.num_of_samples == 1
@@ -31,23 +44,34 @@ def test_forward_pass_runtime():
 
 def test_forward_pass_weight_assignment():
     """ Test if forward pass weights assignment works. """
-    problem = _trainable_circuit()
+    problem, _ = _trainable_circuit()
     algorithm = ForwardPass(shots=5)
     launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
-    results = launcher.run(weights=[0])
+    results = launcher.run(parameters=[0, 0])
     assert results.distribution[(0,)] == 1
-    results = launcher.run(weights=[math.pi])
+    results = launcher.run(parameters=[math.pi, math.pi])
+    assert results.distribution[(1,)] == 1
+
+
+def test_forward_pass_weight_assignment_by_dict():
+    """ Test if forward pass weights assignment works. """
+    problem, (input_param, weight) = _trainable_circuit()
+    algorithm = ForwardPass(shots=5)
+    launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
+    results = launcher.run(parameters={input_param: [0], weight: [0]})
+    assert results.distribution[(0,)] == 1
+    results = launcher.run(parameters={input_param: [math.pi], weight: [math.pi]})
     assert results.distribution[(1,)] == 1
 
 
 def test_forward_pass_auto_assignment():
-    """ Test if forward pass auto parameter assignment works. """
-    problem = _trainable_circuit()
+    """ Test if forward pass auto parameter assignment works. auto_bind is required for AQT"""
+    problem, _ = _trainable_circuit()
     algorithm = ForwardPass(shots=5)
     launcher = QuantumLauncher(problem, algorithm, AQTBackend('local_simulator'))
-    results = launcher.run(weights=[0], auto_bind=True)
+    results = launcher.run(parameters=[0, 0], auto_bind=True)
     assert results.distribution[(0,)] == 1
-    results = launcher.run(weights=[math.pi], auto_bind=True)
+    results = launcher.run(parameters=[math.pi, math.pi], auto_bind=True)
     assert results.distribution[(1,)] == 1
 
 
