@@ -32,4 +32,4 @@ class RzWeight(WeightBlock):
 
     def _build_circuit(self):
         for i in range(self.num_qubits):
-            self._circuit.ry(self.weights[i], i)
+            self._circuit.rz(self.weights[i], i)
