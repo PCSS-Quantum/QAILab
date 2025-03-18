@@ -4,15 +4,17 @@ workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
 
-default:
-  before_script:
-    - python --version ; pip --version
-    - pip install uv
-    - uv venv .venv
-    - source .venv/bin/activate
-    - uv pip install -r requirements.txt
-    - uv pip install -r requirements-dev.txt
-    - uv pip install --editable .
+before_script:
+  - python --version ; pip --version
+  - apt-get update
+  - apt-get upgrade -y
+  - apt-get install -y git
+  - pip install uv
+  - uv venv .venv
+  - source .venv/bin/activate
+  - uv pip install git+https://${QLauncher_TOKEN}:${QLauncher_PASSWORD}@gitlab.pcss.pl/quantum/psnc-sdk/launcher.git@QL-2.0[qiskit,pilotjob,cirq]
+  - uv pip install -r requirements.txt
+  - uv pip install -r requirements-dev.txt
 
 stages:
   - code analysis and testing
