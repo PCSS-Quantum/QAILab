@@ -36,9 +36,9 @@ def build_circuit(
         block.add_to_circuit(circuit)
 
         if isinstance(block, WeightBlock):
-            weight_vectors.append(block.weights_pv)
+            weight_vectors.append(block.weights)
 
     measurement_block = measurement_style(input_size)
     measurement_block.add_to_circuit(circuit)
 
-    return circuit, weight_vectors, encoding_block.x_pv
+    return circuit, weight_vectors, encoding_block.input
