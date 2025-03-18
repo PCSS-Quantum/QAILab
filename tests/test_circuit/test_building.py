@@ -6,23 +6,23 @@ from qiskit.primitives import Sampler
 
 from qlearning.circuit.circuit_builder import build_circuit
 
-from qlearning.circuit.layer_blocks import CXEntangler, RxWeight, RyWeight, RzWeight
-from qlearning.circuit.encoding_blocks import RxEncoder, RyEncoder, RzEncoder
+from qlearning.circuit.layer_blocks import CXEntangler
+from qlearning.circuit.encoding_blocks import RotationalEncoder
 
 
 from qlearning.circuit.measurement_blocks import FirstQubitMeasurement, AllQubitMeasurement
 
 
 def test_builder():
-    res = build_circuit(4, [RxWeight, CXEntangler], RyEncoder, FirstQubitMeasurement)
+    res = build_circuit(4, [RotationalEncoder('y')], [RotationalEncoder('x'), CXEntangler()],  FirstQubitMeasurement())
     assert isinstance(res, tuple)
     assert len(res) == 3
 
     assert isinstance(res[0], QuantumCircuit)
     assert isinstance(res[1], list)
     assert len(res[1]) == 1
-    assert isinstance(res[2], ParameterVector)
-    for v in res[1]:
+    assert isinstance(res[2], list)
+    for v in res[1] + res[2]:
         assert isinstance(v, ParameterVector)
 
     c, _, _ = res
@@ -33,12 +33,12 @@ def test_builder():
 
 
 def test_first_qubit_measurements():
-    c, w, x = build_circuit(3, [RyWeight, CXEntangler], RzEncoder, FirstQubitMeasurement)
+    c, x, w = build_circuit(3, [RotationalEncoder('z')], [RotationalEncoder('y'), CXEntangler()], FirstQubitMeasurement())
     res = Sampler().run(
         c.assign_parameters(
             {
                 w[0]: np.random.uniform(-1, 1, (3,)),
-                x: [1, -1, 2]
+                x[0]: [1, -1, 2]
             }
         )
     )
@@ -47,12 +47,12 @@ def test_first_qubit_measurements():
 
 
 def test_all_qubit_measurement():
-    c, w, x = build_circuit(3, [RzWeight, CXEntangler], RxEncoder, AllQubitMeasurement)
+    c, x, w = build_circuit(3, [RotationalEncoder('x')], [RotationalEncoder('z'), CXEntangler()], AllQubitMeasurement())
     res = Sampler().run(
         c.assign_parameters(
             {
                 w[0]: np.random.uniform(-1, 1, (3,)),
-                x: [1, -1, 2]
+                x[0]: [1, -1, 2]
             }
         )
     )
