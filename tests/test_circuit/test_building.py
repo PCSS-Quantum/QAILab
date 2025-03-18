@@ -25,7 +25,7 @@ def test_builder():
     for v in res[1]:
         assert isinstance(v, ParameterVector)
 
-    c, w, x = res
+    c, _, _ = res
 
     assert c.num_qubits == 4
     assert c.num_parameters == 8  # 4 for weight, 4 for input vector
