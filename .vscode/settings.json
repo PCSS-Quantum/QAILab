@@ -10,6 +10,7 @@
         "qlearning",
         "sdist",
         "setuptools",
+        "Statevector",
         "sympy",
         "venv",
         "virtualenv"

@@ -25,9 +25,23 @@ def test_forward_pass_runtime():
     problem, _ = _trainable_circuit()
     algorithm = ForwardPass(shots=1)
     launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
-    results = launcher.run(parameters=[1, 1])
+    results = launcher.run(parameters=[0, 0], initial_state=[0, 1])
     assert isinstance(results, Result)
     assert isinstance(results.distribution, dict)
+    assert results.distribution[(1,)] == 1
+    assert results.num_of_samples == 1
+
+
+def test_forward_pass_without_params():
+    """ Tests basic forward pass runtime. """
+    problem, _ = _trainable_circuit()
+    problem.instance.assign_parameters([0, 0], inplace=True)
+    algorithm = ForwardPass(shots=1)
+    launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
+    results = launcher.run(initial_state=[0, 1])
+    assert isinstance(results, Result)
+    assert isinstance(results.distribution, dict)
+    assert results.distribution[(1,)] == 1
     assert results.num_of_samples == 1
 
 
@@ -51,6 +65,8 @@ def test_forward_pass_weight_assignment():
     assert results.distribution[(0,)] == 1
     results = launcher.run(parameters=[math.pi, math.pi])
     assert results.distribution[(1,)] == 1
+    results = launcher.run(parameters=[math.pi, math.pi])
+    assert results.distribution[(1,)] == 1
 
 
 def test_forward_pass_weight_assignment_by_dict():
@@ -58,9 +74,9 @@ def test_forward_pass_weight_assignment_by_dict():
     problem, (input_param, weight) = _trainable_circuit()
     algorithm = ForwardPass(shots=5)
     launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
-    results = launcher.run(parameters={input_param: [0], weight: [0]})
+    results = launcher.run(parameters={input_param: [0], weight: [0]}, auto_bind=False)
     assert results.distribution[(0,)] == 1
-    results = launcher.run(parameters={input_param: [math.pi], weight: [math.pi]})
+    results = launcher.run(parameters={input_param: math.pi, weight: math.pi})
     assert results.distribution[(1,)] == 1
 
 
@@ -78,7 +94,7 @@ def test_forward_pass_auto_assignment():
 @pytest.mark.skip('Backward pass is not implemented yet')
 def test_backward_pass_runtime():
     """ Tests basic backward pass runtime. """
-    problem = _trainable_circuit()
+    problem, _ = _trainable_circuit()
     algorithm = BackwardPass(shots=1)
     launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
     results = launcher.run(weights=[1])
@@ -90,7 +106,7 @@ def test_backward_pass_runtime():
 @pytest.mark.skip('Backward pass is not implemented yet')
 def test_backward_pass_weight_assignment():
     """ Test if backward pass weights assignment works. """
-    problem = _trainable_circuit()
+    problem, _ = _trainable_circuit()
     algorithm = BackwardPass(shots=5)
     launcher = QuantumLauncher(problem, algorithm, QiskitBackend('local_simulator'))
     results = launcher.run(weights=[0])
