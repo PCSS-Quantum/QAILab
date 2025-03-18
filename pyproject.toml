@@ -15,3 +15,8 @@ include = ["qlearning/*"]
 
 [project.optional-dependencies]
 test = ["pytest", "pylint", "pre-commit"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
