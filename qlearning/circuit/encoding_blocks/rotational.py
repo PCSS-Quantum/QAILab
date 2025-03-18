@@ -1,35 +1,38 @@
 """R-gate implementations of input vector encoding blocks for variational circuits."""
+from typing import Literal
+
+from qiskit import QuantumCircuit
+from qiskit.circuit import ParameterVector
+
 from qlearning.circuit.base import EncodingBlock
 
 
-class RxEncoder(EncodingBlock):
-    """Encode each part of x with an RX gate (x_i is theta)"""
+class RotationalEncoder(EncodingBlock):
+    """
+    Encoding of input vector using rotational gates.
 
-    def __init__(self, num_qubits) -> None:
-        super().__init__(num_qubits, 'RxEncoder')
+    Attributes:
+        r_gate_type (Literal['x', 'y', 'z']): Type of rotational gate applied to each qubit.
+    """
 
-    def _build_circuit(self):
-        for i in range(self.num_qubits):
-            self._circuit.rx(self.input[i], i)
+    def __init__(self, r_gate_type: Literal['x', 'y', 'z']) -> None:
+        self.r_gate_type: Literal['x', 'y', 'z'] = r_gate_type
+        super().__init__(f"R{r_gate_type}Encoder")
 
+    def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
+        self._parameter_vector = ParameterVector(f"R_Encoder_Params_{hex(id(super()))}", num_qubits)
 
-class RyEncoder(EncodingBlock):
-    """Encode each part of x with an RY gate (x_i is theta)"""
+        circuit = QuantumCircuit(num_qubits)
+        match self.r_gate_type:
+            case 'x':
+                fn = circuit.rx
+            case 'y':
+                fn = circuit.ry
+            case 'z':
+                fn = circuit.rz
+            case _:
+                raise ValueError(f"'{self.r_gate_type}' is not a valid rotational gate type")
+        for i in range(num_qubits):
+            fn(self._parameter_vector[i], i)
 
-    def __init__(self, num_qubits) -> None:
-        super().__init__(num_qubits, 'RyEncoder')
-
-    def _build_circuit(self):
-        for i in range(self.num_qubits):
-            self._circuit.ry(self.input[i], i)
-
-
-class RzEncoder(EncodingBlock):
-    """Encode each part of x with an RZ gate (x_i is theta)"""
-
-    def __init__(self, num_qubits) -> None:
-        super().__init__(num_qubits, 'RzEncoder')
-
-    def _build_circuit(self):
-        for i in range(self.num_qubits):
-            self._circuit.rz(self.input[i], i)
+        return circuit
