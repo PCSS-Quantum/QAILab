@@ -10,7 +10,7 @@ class RxEncoder(EncodingBlock):
 
     def _build_circuit(self):
         for i in range(self.num_qubits):
-            self._circuit.rx(self.x_pv[i], i)
+            self._circuit.rx(self.input[i], i)
 
 
 class RyEncoder(EncodingBlock):
@@ -21,7 +21,7 @@ class RyEncoder(EncodingBlock):
 
     def _build_circuit(self):
         for i in range(self.num_qubits):
-            self._circuit.ry(self.x_pv[i], i)
+            self._circuit.ry(self.input[i], i)
 
 
 class RzEncoder(EncodingBlock):
@@ -32,4 +32,4 @@ class RzEncoder(EncodingBlock):
 
     def _build_circuit(self):
         for i in range(self.num_qubits):
-            self._circuit.rz(self.x_pv[i], i)
+            self._circuit.rz(self.input[i], i)

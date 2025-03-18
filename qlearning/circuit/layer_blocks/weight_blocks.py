@@ -10,7 +10,7 @@ class RxWeight(WeightBlock):
 
     def _build_circuit(self):
         for i in range(self.num_qubits):
-            self._circuit.rx(self.weights_pv[i], i)
+            self._circuit.rx(self.weights[i], i)
 
 
 class RyWeight(WeightBlock):
@@ -21,7 +21,7 @@ class RyWeight(WeightBlock):
 
     def _build_circuit(self):
         for i in range(self.num_qubits):
-            self._circuit.ry(self.weights_pv[i], i)
+            self._circuit.ry(self.weights[i], i)
 
 
 class RzWeight(WeightBlock):
@@ -32,4 +32,4 @@ class RzWeight(WeightBlock):
 
     def _build_circuit(self):
         for i in range(self.num_qubits):
-            self._circuit.ry(self.weights_pv[i], i)
+            self._circuit.ry(self.weights[i], i)
