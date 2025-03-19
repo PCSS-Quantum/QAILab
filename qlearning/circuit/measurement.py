@@ -1,5 +1,5 @@
 """Block implementing circuit measurement"""
-from typing import Sequence
+from collections.abc import Sequence
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.quantumcircuit import QubitSpecifier

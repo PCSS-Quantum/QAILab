@@ -1,5 +1,6 @@
 """Build parameterized QuantumCircuits from lists of blocks."""
-from typing import Sequence, Any
+from typing import Any
+from collections.abc import Sequence
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import ParameterVector
