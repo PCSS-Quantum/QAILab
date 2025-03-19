@@ -18,6 +18,7 @@ class QLayer(nn.Module):
     def __init__(
         self,
         circuit: QuantumCircuit,
+        *,
         shots: int = 1024,
     ) -> None:
         super().__init__()
