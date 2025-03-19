@@ -4,11 +4,10 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import ParameterVector
 from qiskit.primitives import Sampler
 
-from qlearning.circuit.circuit_builder import build_circuit
-
 from qlearning.circuit.base import CircuitBlock
 from qlearning.circuit.layer_blocks import CXEntangler
 from qlearning.circuit.encoding_blocks import RotationalEncoder
+from qlearning.circuit.circuit_builder import build_circuit
 
 
 def test_builder():
