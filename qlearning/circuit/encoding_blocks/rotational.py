@@ -20,7 +20,9 @@ class RotationalEncoder(EncodingBlock):
         super().__init__(f"R{r_gate_type}Encoder")
 
     def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
-        self._parameter_vector = ParameterVector(f"R_Encoder_Params_{hex(id(super()))}", num_qubits)
+        # Don't create new parameter vectors. This would enable the user to encode the same vector in different parts of the circuit.
+        if self._parameter_vector is None:
+            self._parameter_vector = ParameterVector(f"R_Encoder_Params_{hex(id(super()))}", num_qubits)
 
         circuit = QuantumCircuit(num_qubits)
         match self.r_gate_type:

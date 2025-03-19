@@ -1,19 +1,25 @@
-"""Build parameterized QuantumCircuits from lists of block types."""
-from typing import Sequence
+"""Build parameterized QuantumCircuits from lists of blocks."""
+from typing import Sequence, Any
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import ParameterVector
-from qiskit.quantum_info.states.statevector import Statevector
+from qiskit.circuit.quantumcircuit import QubitSpecifier
 
-from qlearning.circuit.base import CircuitBlock, EncodingBlock, MeasurementBlock
+from qlearning.circuit.measurement import MeasurementBlock
+from qlearning.circuit.base import CircuitBlock, EncodingBlock
+
+
+def _dedup(var_list: list[Any]) -> list[Any]:
+    res = []
+    [res.append(e) for e in var_list if e not in res]
+    return res
 
 
 def build_circuit(
     circuit_width: int,
-    input_encoding_blocks: list[EncodingBlock],
-    layer_blocks: list[CircuitBlock],
-    measurement_block: MeasurementBlock,
-    initial_state: Statevector | Sequence[complex] | str | int | None = None,
+    input_encoding_blocks: list[EncodingBlock] | None = None,
+    layer_blocks: list[CircuitBlock] | None = None,
+    measure_qubits: Sequence[QubitSpecifier] | None = None,
     # * **kwargs  WIP
 ) -> tuple[QuantumCircuit, list[ParameterVector], list[ParameterVector]]:
     """
@@ -21,10 +27,10 @@ def build_circuit(
 
     Args:
         circuit_width (int): Number of qubits used for the circuit.
-        input_encoding_blocks (list[EncodingBlock]): Blocks encoding the input vector.
-        layer_blocks (list[CircuitBlock]): Blocks encoding the weights, doing entanglement etc.
-        measurement_block (MeasurementBlock): What type of measurement to use.
-        initial_state (Statevector | Sequence[complex] | str | int | None, optional): Initial qubit state. Defaults to None.
+        input_encoding_blocks (list[EncodingBlock] | None, optional): Blocks encoding the input vector. Defaults to None.
+        layer_blocks (list[CircuitBlock] | None, optional): Blocks encoding the weights, doing entanglement etc. Defaults to None.
+        measure_qubits (Sequence[QubitSpecifier] | None, optional):
+        Which qubits to measure. If None, measure all, except auxiliary. Defaults to None.
 
     Returns:
         tuple[QuantumCircuit, list[ParameterVector], list[ParameterVector]]:
@@ -32,21 +38,27 @@ def build_circuit(
     """
     circuit = QuantumCircuit(circuit_width)
 
-    if initial_state is not None:
-        circuit.prepare_state(initial_state)
+    if input_encoding_blocks is None:
+        input_encoding_blocks = []
+
+    if layer_blocks is None:
+        layer_blocks = []
+
+    qargs = list(range(circuit_width))
 
     input_vectors = []
     for block in input_encoding_blocks:
-        block.add_to_circuit(circuit)
+        block.add_to_circuit(circuit, qargs)
         input_vectors.append(block.parameter_vector)
 
     weight_vectors = []
     for block in layer_blocks:
-        block.add_to_circuit(circuit)
+        block.add_to_circuit(circuit, qargs)
 
         if isinstance(block, EncodingBlock):
             weight_vectors.append(block.parameter_vector)
 
-    measurement_block.add_to_circuit(circuit)
+    measurement_block = MeasurementBlock()
+    measurement_block.add_to_circuit(circuit, measure_qubits if measure_qubits is not None else qargs)
 
-    return circuit, input_vectors, weight_vectors
+    return circuit, _dedup(input_vectors), _dedup(weight_vectors)  # Return only unique parameter vectors
