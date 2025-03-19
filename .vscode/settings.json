@@ -3,6 +3,7 @@
         "cuda",
         "cudnn",
         "httpx",
+        "kaiming",
         "networkx",
         "pylint",
         "qiskit",
