@@ -11,6 +11,7 @@
         "qlearning",
         "sdist",
         "setuptools",
+        "SPSA",
         "Statevector",
         "sympy",
         "venv",
