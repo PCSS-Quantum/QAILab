@@ -1,6 +1,6 @@
 """ABC structure for circuit building blocks"""
 from abc import ABC, abstractmethod
-from typing import Sequence
+from collections.abc import Sequence
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import ParameterVector, QuantumRegister
