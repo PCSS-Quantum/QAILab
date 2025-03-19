@@ -10,9 +10,7 @@ from qlearning.circuit.base import CircuitBlock, EncodingBlock
 
 
 def _dedup(var_list: list[Any]) -> list[Any]:
-    res = []
-    [res.append(e) for e in var_list if e not in res]
-    return res
+    return list(dict.fromkeys(var_list))
 
 
 def build_circuit(
