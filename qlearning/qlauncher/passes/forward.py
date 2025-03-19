@@ -47,7 +47,7 @@ class ForwardPass(Algorithm):
             data = pub.data['c'].array
             distribution = defaultdict(float)
             for i in data:
-                distribution[tuple(i)] += 1/self.shots
+                distribution[tuple(i)] += 1 / self.shots
             distributions.append(distribution)
         return distributions
 
