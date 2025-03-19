@@ -5,9 +5,10 @@ import torch
 from quantum_launcher import QuantumLauncher, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 from qiskit import QuantumCircuit
-
+from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
+Isometry.__init__.__defaults__ = (1e-6,)  # FIXME: If anyone has any idea, feel free
 
 
 class QLayer(nn.Module):
@@ -16,7 +17,8 @@ class QLayer(nn.Module):
 
     def __init__(
         self,
-        circuit: QuantumCircuit
+        circuit: QuantumCircuit,
+        shots: int = 1024,
     ) -> None:
         super().__init__()
         self.weight = nn.Parameter(
@@ -25,8 +27,8 @@ class QLayer(nn.Module):
         self.reset_parameters()
         self.circuit = circuit
         self.circuit_pr = CircuitProblem(self.circuit)
-        self.launcher_forward = QuantumLauncher(self.circuit_pr, ForwardPass(), QiskitBackend('local_simulator'))
-        self.launcher_backward = QuantumLauncher(self.circuit_pr, BackwardPass('parameter-shift'))
+        self.launcher_forward = QuantumLauncher(self.circuit_pr, ForwardPass(shots=shots), QiskitBackend('local_simulator'))
+        self.launcher_backward = QuantumLauncher(self.circuit_pr, BackwardPass('parameter-shift', shots=shots))
 
     def reset_parameters(self) -> None:
         """ Parameter reset """
