@@ -11,6 +11,7 @@ echo "\n\033[1m============Preparing developer setup==============\033[0m\n"
 source .venv/bin/activate
 
 echo "\n\033[1m==============Installing requirements==============\033[0m\n"
+uv pip install -r requirements.txt
 uv pip install -r requirements-dev.txt
 uv pip install -r requirements-ql.txt
 {
