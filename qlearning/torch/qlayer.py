@@ -5,6 +5,7 @@ import torch
 from quantum_launcher import QuantumLauncher, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 from qiskit import QuantumCircuit
+from qiskit.circuit import Parameter
 from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
@@ -22,11 +23,11 @@ class QLayer(nn.Module):
         shots: int = 1024,
     ) -> None:
         super().__init__()
-        self.trainable_params = list(filter(lambda x: not x.name.startswith('input'), circuit.parameters))
+        self._input_parameters = list(filter(self._is_input_parameter, circuit.parameters)) or None
+        self.trainable_params = list(filter(lambda x: not self._is_input_parameter(x), circuit.parameters))
         self.weight = nn.Parameter(
             torch.empty((len(self.trainable_params), 1))
         )
-        self._input_parameters = list(filter(lambda x: x.name.startswith('input'), circuit.parameters)) or None
         self.reset_parameters()
         self.circuit = circuit
         self.circuit_pr = CircuitProblem(self.circuit)
@@ -55,3 +56,7 @@ class QLayer(nn.Module):
 
     def _postprocess(self, result: Result):
         return max(result.distribution, key=lambda x: result.distribution[x])
+
+    @staticmethod
+    def _is_input_parameter(parameter: Parameter) -> bool:
+        return parameter.name.startswith('input')
