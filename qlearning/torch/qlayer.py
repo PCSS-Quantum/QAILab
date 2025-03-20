@@ -22,9 +22,11 @@ class QLayer(nn.Module):
         shots: int = 1024,
     ) -> None:
         super().__init__()
+        self.trainable_params = list(filter(lambda x: not x.name.startswith('input'), circuit.parameters))
         self.weight = nn.Parameter(
-            torch.empty((len(circuit.parameters), 1))
+            torch.empty((len(self.trainable_params), 1))
         )
+        self._input_parameters = list(filter(lambda x: x.name.startswith('input'), circuit.parameters)) or None
         self.reset_parameters()
         self.circuit = circuit
         self.circuit_pr = CircuitProblem(self.circuit)
@@ -38,8 +40,13 @@ class QLayer(nn.Module):
     def forward(self, input_tensor: Tensor) -> Tensor:
         """ Forward """
         weight = self.weight.detach().cpu().numpy()  # pylint: disable=not-callable
+        parameters = dict(zip(self.trainable_params, weight[0]))
         input_array = input_tensor.detach().cpu().numpy()
-        result = self.launcher_forward.run(initial_state=input_array, parameters=weight[0])
+        if self._input_parameters is not None:
+            input_params = dict(zip(self._input_parameters, input_array))
+            parameters.update(input_params)
+            input_array = None
+        result = self.launcher_forward.run(initial_state=input_array, parameters=parameters)
         output_array = self._postprocess(result)
         return Tensor(output_array)
 

@@ -16,6 +16,17 @@ def build_circuit() -> qiskit.QuantumCircuit:
     return circuit
 
 
+def build_circuit_param_based_input() -> qiskit.QuantumCircuit:
+    """ build example circuit with encoding input as a params """
+    param = qiskit.circuit.ParameterVector('weight', 1)
+    input_param = qiskit.circuit.ParameterVector('input_param', 1)
+    circuit = qiskit.QuantumCircuit(1, 1)
+    circuit.rx(input_param[0], 0)
+    circuit.ry(param[0], 0)
+    circuit.measure(0, 0)
+    return circuit
+
+
 def test_runtime():
     """ Runtime test """
     class QuantumModel(nn.Module):
@@ -50,6 +61,33 @@ def test_integration():
             self.net = torch.nn.Sequential(
                 nn.Linear(4, 2),
                 QLayer(build_circuit()),
+                nn.Linear(1, 1),
+            )
+
+        def forward(self, x):
+            """ Forward pass """
+            return self.net(x)
+
+    quantum_model = QuantumModel()
+    loss_fn = nn.MSELoss()
+    desired_result = torch.Tensor([1])
+    test_input = torch.Tensor([-0.111111, .3, 1, 1])
+    predictions = quantum_model(test_input)
+    assert isinstance(predictions, torch.Tensor)
+    loss = loss_fn(predictions, desired_result)
+    assert isinstance(loss, torch.Tensor)
+
+
+def test_parameter_input_encoding():
+    """ Testing if encoding input via parameters works properly """
+    class QuantumModel(nn.Module):
+        """ Hybrid model """
+
+        def __init__(self):
+            super().__init__()
+            self.net = torch.nn.Sequential(
+                nn.Linear(4, 2),
+                QLayer(build_circuit_param_based_input()),
                 nn.Linear(1, 1),
             )
 
