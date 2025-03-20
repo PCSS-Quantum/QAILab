@@ -3,7 +3,7 @@ from collections.abc import Callable
 from typing import Literal
 import torch
 from torch import Tensor, optim
-from torch.nn import MSELoss, Module, Linear, ModuleList
+from torch.nn import MSELoss, Module, ModuleList
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from tqdm import tqdm
@@ -151,5 +151,3 @@ class QModel(Module, BaseEstimator):
         self.eval()
         with torch.inference_mode():
             return self(x).cpu()
-
-
