@@ -24,6 +24,5 @@
         "tests"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "todo-tree.tree.scanMode": "current file"
+    "python.testing.pytestEnabled": true
 }
