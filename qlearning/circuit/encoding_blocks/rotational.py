@@ -13,16 +13,17 @@ class RotationalEncoder(EncodingBlock):
 
     Attributes:
         r_gate_type (Literal['x', 'y', 'z']): Type of rotational gate applied to each qubit.
+        block_type (Literal['input', 'weight']): Whether this block encodes weights or inputs.
     """
 
-    def __init__(self, r_gate_type: Literal['x', 'y', 'z']) -> None:
+    def __init__(self, r_gate_type: Literal['x', 'y', 'z'], block_type: Literal['input', 'weight']) -> None:
         self.r_gate_type: Literal['x', 'y', 'z'] = r_gate_type
-        super().__init__(f"R{r_gate_type}Encoder")
+        super().__init__(f"R{r_gate_type}Encoder", block_type)
 
     def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
         # Don't create new parameter vectors. This would enable the user to encode the same vector in different parts of the circuit.
         if self._parameter_vector is None:
-            self._parameter_vector = ParameterVector(f"R_Encoder_Params_{hex(id(super()))}", num_qubits)
+            self._parameter_vector = ParameterVector(f"{self.block_type}_R_Encoder_Params_{hex(id(super()))}", num_qubits)
 
         circuit = QuantumCircuit(num_qubits)
         match self.r_gate_type:

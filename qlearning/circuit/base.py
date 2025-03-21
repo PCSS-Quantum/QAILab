@@ -1,5 +1,6 @@
 """ABC structure for circuit building blocks"""
 from abc import ABC, abstractmethod
+from typing import Literal
 from collections.abc import Sequence
 
 from qiskit import QuantumCircuit
@@ -81,4 +82,13 @@ class EntanglingBlock(CircuitBlock, ABC):
 
 
 class EncodingBlock(ParameterizedBlock, CircuitBlock, ABC):
-    """Blocks encoding some parameter vector (trainable or not)"""
+    """
+    Blocks encoding some parameter vector (trainable or not)
+
+    Attributes:
+        block_type (Literal['input', 'weight']): Whether this block encodes weights or inputs.
+    """
+
+    def __init__(self, name: str = 'unknown', block_type: Literal['input', 'weight'] = 'input') -> None:
+        self.block_type = block_type
+        super().__init__(name)

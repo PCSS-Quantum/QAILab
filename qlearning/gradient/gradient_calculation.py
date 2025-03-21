@@ -1,13 +1,11 @@
 """Derivative calculation for parameterized quantum circuits."""
 from typing import Literal
-from collections.abc import Sequence
-from itertools import chain
 
 import numpy as np
 
 from qiskit import QuantumCircuit
 from qiskit.primitives import Sampler
-from qiskit.circuit import ParameterVector
+from qiskit.circuit import Parameter
 from qiskit_algorithms.gradients import (
     BaseSamplerGradient,
     LinCombSamplerGradient,
@@ -28,26 +26,27 @@ def _param_grads_to_jacobian(grads, num_possible_values) -> np.ndarray:
 
 def calculate_jacobian(
     circuit: QuantumCircuit,
-    set_params: dict[ParameterVector, Sequence[int | float]],
+    set_params: dict[Parameter, int | float],
     backend: Backend,
-    method: Literal['param_shift', 'spsa', 'lin_comb', 'fin_diff'] = 'param_shift'
+    method: Literal['param_shift', 'spsa', 'lin_comb', 'fin_diff'] = 'param_shift',
+    shots: int = 1024
 ) -> np.ndarray:
     """
-    !TODO: write docs
+    For each parameter calculate partial derivatives w.r.t to each output value (possible measurement).
 
     Args:
-        circuit (QuantumCircuit): _description_
-        set_params (dict[ParameterVector, Sequence[int  |  float]]): _description_
-        backend (Backend): _description_
+        circuit (QuantumCircuit): Circuit to sample.
+        set_params (dict[Parameter, int  |  float]): Parameters for which to calculate derivatives and their current values.
+        backend (Backend): Backend to use.
         method (Literal[&#39;param_shift&#39;, &#39;spsa&#39;, &#39;lin_comb&#39;, &#39;fin_diff&#39;], optional):
-        _description_. Defaults to 'param_shift'.
+        Gradient algorithm to use. Defaults to 'param_shift'.
+        shots (int): How many shots to use for Sampler.
 
     Raises:
-        ValueError: _description_
-        ValueError: _description_
+        ValueError: For unsupported method or backend.
 
     Returns:
-        np.ndarray: _description_
+        np.ndarray: `len(set_params) x 2^measured_qubits` matrix of partial derivatives.
     """
     gradient_type = {
         'param_shift': ParamShiftSamplerGradient,
@@ -67,9 +66,7 @@ def calculate_jacobian(
     #! TODO: change this sampler to backend sampler when adapter is fixed!!!!
     gradient_calc: BaseSamplerGradient = gradient_type(Sampler())
 
-    param_vectors, param_values = zip(*list(set_params.items()))
+    params, values = zip(*list(set_params.items()))
 
-    params, values = list(chain(*[pv.params for pv in param_vectors])), list(chain(*param_values))
-
-    grads = gradient_calc.run([circuit], [values], [params]).result().gradients[0]
+    grads = gradient_calc.run([circuit], [values], [params], shots=shots).result().gradients[0]
     return _param_grads_to_jacobian(grads, num_possible_values)
