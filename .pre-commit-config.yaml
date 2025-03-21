@@ -8,6 +8,7 @@ repos:
   - repo: local
     hooks:
       - id: pylint
+        exclude: ^tests/.*$
         name: pylint
         entry: .venv/bin/pylint
         language: system
