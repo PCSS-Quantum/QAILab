@@ -9,6 +9,7 @@ from qiskit.circuit import Parameter
 from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
+from qlearning.utils import distribution_to_array
 Isometry.__init__.__defaults__ = (1e-6,)  # FIXME: If anyone has any idea, feel free
 
 
@@ -41,7 +42,7 @@ class QLayer(nn.Module):
     def forward(self, input_tensor: Tensor) -> Tensor:
         """ Forward """
         weight = self.weight.detach().cpu().numpy()  # pylint: disable=not-callable
-        parameters = dict(zip(self.trainable_params, weight[0]))
+        parameters = dict(zip(self.trainable_params, weight[:, 0]))
         input_array = input_tensor.detach().cpu().numpy()
         if self._input_parameters is not None:
             input_params = dict(zip(self._input_parameters, input_array))
@@ -60,3 +61,10 @@ class QLayer(nn.Module):
     @staticmethod
     def _is_input_parameter(parameter: Parameter) -> bool:
         return parameter.name.startswith('input')
+
+
+class ExpQLayer(QLayer):
+    """ Implementation of QLayer with distribution as an output """
+
+    def _postprocess(self, result: Result):
+        return distribution_to_array(result.distribution)
