@@ -1,4 +1,6 @@
 """Autograd extensions for VQCs"""
+import numpy as np
+
 import torch
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
@@ -39,7 +41,8 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         weight_params = filter_params(launcher_forward.problem.instance, 'weight')
 
         fn_in_numpy = fn_in.cpu().detach().numpy()
-        weight_numpy = weight.cpu().detach().numpy()
+        # Weights are usually pretty small so we rescale them to <-pi,pi>
+        weight_numpy = weight.cpu().detach().numpy() * np.pi
 
         params = {
             **param_map(input_params, fn_in_numpy),
