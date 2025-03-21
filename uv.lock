@@ -508,8 +508,8 @@ requires-dist = [
     { name = "pre-commit", marker = "extra == 'test'" },
     { name = "pylint", marker = "extra == 'test'" },
     { name = "pytest", marker = "extra == 'test'" },
-    { name = "qiskit", specifier = ">=1.4.1" },
-    { name = "torch", specifier = ">=2.6.0" },
+    { name = "qiskit", specifier = ">=1.4.0" },
+    { name = "torch", specifier = ">=2.5.0" },
 ]
 
 [[package]]

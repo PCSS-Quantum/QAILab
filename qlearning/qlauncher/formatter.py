@@ -42,7 +42,7 @@ class _CircuitForwardFormatter:
         if initial_state is not None:
             old_circuit: QuantumCircuit = problem.instance
             circuit = QuantumCircuit(old_circuit.qubits)
-            circuit.prepare_state(initial_state)
+            circuit.prepare_state(initial_state, normalize=True)
             circuit.compose(old_circuit, inplace=True)
         else:
             circuit: QuantumCircuit = problem.instance

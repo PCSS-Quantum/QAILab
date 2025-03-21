@@ -45,9 +45,10 @@ class ForwardPass(Algorithm):
         distributions = []
         for pub in result._pub_results:  # pylint: disable=protected-access
             data = pub.data['c'].array
+            num_qubits = pub.data['c'].num_bits
             distribution = defaultdict(float)
             for i in data:
-                distribution[tuple(i)] += 1/self.shots
+                distribution[number_to_bit_tuple(i, num_qubits)] += 1 / self.shots
             distributions.append(distribution)
         return distributions
 
