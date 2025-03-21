@@ -30,4 +30,4 @@ def test_runs_forward():
     )
     assert isinstance(res, Result)
     assert isinstance(res.distribution, dict)
-    assert res.distribution[(1,)] == 1
+    assert res.distribution[(0, 1)] == 1
