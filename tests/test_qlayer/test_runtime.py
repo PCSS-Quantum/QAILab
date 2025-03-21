@@ -132,3 +132,5 @@ def test_exp_layer():
     assert isinstance(predictions, torch.Tensor)
     loss = loss_fn(predictions, desired_result)
     assert isinstance(loss, torch.Tensor)
+
+    loss.backward()  # Test if calling backward generates no errors
