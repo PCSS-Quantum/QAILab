@@ -2,11 +2,13 @@
 from collections.abc import Sequence
 from typing import Literal
 
+import numpy as np
+
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 
 
-def param_map(params: Sequence[Parameter], values: Sequence[float]) -> dict[Parameter, float]:
+def param_map(params: Sequence[Parameter], values: Sequence[float] | np.ndarray) -> dict[Parameter, float]:
     """
     Map values to params.
 

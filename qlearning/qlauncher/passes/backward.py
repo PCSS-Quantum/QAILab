@@ -1,6 +1,6 @@
 """ Backward pass algorithm implementation in quantum_launcher. """
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 from quantum_launcher.base.base import Backend, Problem, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 from qlearning.qlauncher.passes.forward import ForwardPass
@@ -10,7 +10,7 @@ from qlearning.gradient.gradient_calculation import calculate_jacobian
 class BackwardPass(ForwardPass):
     """ Backward Pass, calculates two jacobian matrices: w.r.t. to input and w.r.t. weights"""
 
-    def __init__(self, gradient_method: str = '', shots: int = 1024) -> None:
+    def __init__(self, gradient_method: Literal['param_shift', 'spsa', 'lin_comb', 'fin_diff'] = 'param_shift', shots: int = 1024) -> None:
         self.gradient_method = gradient_method
         self.shots = shots
         super().__init__()
@@ -31,7 +31,19 @@ class BackwardPass(ForwardPass):
         weight_params = {x: params[x] for x in params if x.name.startswith('weight')}
 
         # All other params must be assigned.
-        input_jacobian = calculate_jacobian(circuit.assign_parameters(weight_params), input_params, backend, 'spsa', self.shots)
-        weight_jacobian = calculate_jacobian(circuit.assign_parameters(input_params), weight_params, backend, 'spsa', self.shots)
+        input_jacobian = calculate_jacobian(
+            circuit.assign_parameters(weight_params),
+            input_params,
+            backend,
+            self.gradient_method,
+            self.shots
+        )
+        weight_jacobian = calculate_jacobian(
+            circuit.assign_parameters(input_params),
+            weight_params,
+            backend,
+            self.gradient_method,
+            self.shots
+        )
 
         return Result('', 0, '', 0, {}, {}, self.shots, 0, 0, {'input': input_jacobian, 'weights': weight_jacobian})
