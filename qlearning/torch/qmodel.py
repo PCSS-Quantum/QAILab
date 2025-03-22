@@ -2,8 +2,7 @@
 from collections.abc import Callable
 from typing import Literal
 import torch
-from torch import Tensor, optim
-from torch.nn import MSELoss, Module, ModuleList
+from torch import Tensor, optim, nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from tqdm import tqdm
@@ -16,12 +15,12 @@ available_optimizers: dict[str, type[Optimizer]] = {opt.__name__.lower(): opt fo
     optim.Adam, optim.AdamW, optim.SGD, optim.Adadelta, optim.Adagrad, optim.Adamax, optim.RMSprop, optim.Rprop, optim.LBFGS]}
 
 
-class QModel(Module):
+class QModel(nn.Module):
     """ Quantum model class """
-    layers: ModuleList
+    layers: nn.ModuleList
     optimizer_type: type[Optimizer]
     optimizer: Optimizer
-    learning_rate: int | None
+    learning_rate: float | None
     loss: Callable
     batch_size: int
     epochs: int
@@ -31,7 +30,7 @@ class QModel(Module):
 
     def __init__(
         self,
-        layers: list[Module],
+        layers: list[nn.Module],
         optimizer_type: type[Optimizer] | str | None = None,
         learning_rate: float | None = None,
         loss: Callable | None = None,
@@ -42,7 +41,7 @@ class QModel(Module):
         device: Literal["cpu", "cuda", "mps"] = "cpu"
     ):
         super().__init__()
-        self.layers = ModuleList(layers)
+        self.layers = nn.ModuleList(layers)
         if optimizer_type is None:
             optimizer_type = optim.AdamW
         if isinstance(optimizer_type, str):
@@ -52,12 +51,13 @@ class QModel(Module):
                 raise ValueError(
                     f"Unknown optimizer: {optimizer_type}. Available optimizers are: {list(available_optimizers.keys())}") from e
         self.optimizer_type = optimizer_type
+        self.learning_rate = learning_rate
         if learning_rate is not None:
-            self.optimizer = optimizer_type(self.parameters(), lr=learning_rate)
+            self.optimizer = optimizer_type(self.parameters(), lr=learning_rate)  # type: ignore
         else:
-            self.optimizer = self.optimizer_type(self.parameters())
+            self.optimizer = self.optimizer_type(self.parameters())  # type: ignore
         if loss is None:
-            loss = MSELoss()
+            loss = nn.MSELoss()
         self.loss = loss
         self.batch_size = batch_size
         self.epochs = epochs
@@ -100,6 +100,7 @@ class QModel(Module):
         self,
         x: Tensor | np.ndarray | pd.DataFrame,
         y: Tensor | np.ndarray | pd.DataFrame | pd.Series
+
     ) -> tuple[Tensor, Tensor]:
         if isinstance(x, np.ndarray):
             x = torch.tensor(x, dtype=torch.float32)
@@ -111,7 +112,7 @@ class QModel(Module):
         if isinstance(x, pd.DataFrame):
             x = torch.tensor(x.values, dtype=torch.float32)
         if isinstance(y, pd.DataFrame):
-            y = torch.tensor(y.values)
+            y = torch.tensor(y.values, dtype=torch.float32)
         if isinstance(y, pd.Series):
             if y.dtype == np.dtype('int64'):
                 y = torch.tensor(y.values, dtype=torch.int64)
@@ -186,6 +187,7 @@ class QModel(Module):
         return {
             "layers": self.layers,
             "optimizer_type": self.optimizer_type,
+            "learning_rate": self.learning_rate,
             "loss": self.loss,
             "batch_size": self.batch_size,
             "epochs": self.epochs,
@@ -196,6 +198,10 @@ class QModel(Module):
 
     def set_params(self, **params):
         """ scikit-learn like param setting method"""
+
+        def _update_optimizer():
+            self.optimizer = self.optimizer_type(self.parameters()) if self.learning_rate is None else self.optimizer_type(  # type: ignore
+                self.parameters(), lr=self.learning_rate)  # type: ignore
         if not params:
             return self
         valid_params = self.get_params()
@@ -210,7 +216,11 @@ class QModel(Module):
                 self.to(self.device)
             if key == "optimizer_type":
                 self.optimizer_type = value
-                self.optimizer = self.optimizer_type(self.parameters())
+                _update_optimizer()
+            if key == "learning_rate":
+                self.learning_rate = value
+                _update_optimizer()
             if key == "layers":
-                self.layers = ModuleList(value)
+                self.layers = nn.ModuleList(value)
+                _update_optimizer()
         return self
