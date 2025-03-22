@@ -8,7 +8,7 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from tqdm import tqdm
 import numpy as np
-from sklearn.base import BaseEstimator
+import pandas as pd
 
 from qlearning.torch.qlayer import QLayer
 
@@ -16,21 +16,24 @@ available_optimizers: dict[str, type[Optimizer]] = {opt.__name__.lower(): opt fo
     optim.Adam, optim.AdamW, optim.SGD, optim.Adadelta, optim.Adagrad, optim.Adamax, optim.RMSprop, optim.Rprop, optim.LBFGS]}
 
 
-class QModel(Module, BaseEstimator):
+class QModel(Module):
     """ Quantum model class """
     layers: ModuleList
     optimizer_type: type[Optimizer]
     optimizer: Optimizer
+    learning_rate: int | None
     loss: Callable
     batch_size: int
     epochs: int
     validation_fraction: float
     shuffle: bool
+    device: Literal["cpu", "cuda", "mps"] = "cpu"
 
     def __init__(
         self,
         layers: list[Module],
         optimizer_type: type[Optimizer] | str | None = None,
+        learning_rate: float | None = None,
         loss: Callable | None = None,
         batch_size: int = 1,
         epochs: int = 1,
@@ -49,7 +52,10 @@ class QModel(Module, BaseEstimator):
                 raise ValueError(
                     f"Unknown optimizer: {optimizer_type}. Available optimizers are: {list(available_optimizers.keys())}") from e
         self.optimizer_type = optimizer_type
-        self.optimizer = optimizer_type(self.parameters())
+        if learning_rate is not None:
+            self.optimizer = optimizer_type(self.parameters(), lr=learning_rate)
+        else:
+            self.optimizer = self.optimizer_type(self.parameters())
         if loss is None:
             loss = MSELoss()
         self.loss = loss
@@ -72,15 +78,9 @@ class QModel(Module, BaseEstimator):
             input_tensor = layer(input_tensor)
         return input_tensor
 
-    def fit(self, x: Tensor | np.ndarray, y: Tensor | np.ndarray) -> "QModel":
+    def fit(self, x: Tensor | np.ndarray | pd.DataFrame, y: Tensor | np.ndarray | pd.DataFrame | pd.Series) -> "QModel":
         """ scikit-learn like fit method """
-        if isinstance(x, np.ndarray):
-            x = torch.tensor(x, dtype=torch.float32)
-        if isinstance(y, np.ndarray):
-            y = torch.tensor(y, dtype=torch.float32)
-        if x.shape[0] != y.shape[0]:
-            raise ValueError("X and y tensors should have the same first dimension")
-        x, y = x.to(self.device), y.to(self.device)
+        x, y = self._validate_x_y(x, y)
         tensor_dataset = TensorDataset(x, y)
         train_dataset, validation_dataset = random_split(tensor_dataset, [1 - self.validation_fraction, self.validation_fraction])
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
@@ -88,15 +88,44 @@ class QModel(Module, BaseEstimator):
         self._train_loop(train_loader, validation_loader, self.epochs)
         return self
 
-    def fit_predict(self, x: Tensor | np.ndarray, y: Tensor | np.ndarray) -> Tensor:
-        """ scikit-learn like fit_predict method """
+    def _validate_x(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
+        if isinstance(x, np.ndarray):
+            x = torch.tensor(x, dtype=torch.float32)
+        if isinstance(x, pd.DataFrame):
+            x = torch.tensor(x.values, dtype=torch.float32)
+        x = x.to(self.device)
+        return x
+
+    def _validate_x_y(
+        self,
+        x: Tensor | np.ndarray | pd.DataFrame,
+        y: Tensor | np.ndarray | pd.DataFrame | pd.Series
+    ) -> tuple[Tensor, Tensor]:
         if isinstance(x, np.ndarray):
             x = torch.tensor(x, dtype=torch.float32)
         if isinstance(y, np.ndarray):
-            y = torch.tensor(y, dtype=torch.float32)
+            if y.dtype.kind == "i":
+                y = torch.tensor(y, dtype=torch.int64)
+            else:
+                y = torch.tensor(y, dtype=torch.float32)
+        if isinstance(x, pd.DataFrame):
+            x = torch.tensor(x.values, dtype=torch.float32)
+        if isinstance(y, pd.DataFrame):
+            y = torch.tensor(y.values)
+        if isinstance(y, pd.Series):
+            if y.dtype == np.dtype('int64'):
+                y = torch.tensor(y.values, dtype=torch.int64)
+            else:
+                y = torch.tensor(y.values, dtype=torch.float32)
         if x.shape[0] != y.shape[0]:
             raise ValueError("X and y tensors should have the same first dimension")
-        x, y = x.to(self.device), y.to(self.device)
+        x = x.to(self.device)
+        y = y.to(self.device)
+        return x, y
+
+    def fit_predict(self, x: Tensor | np.ndarray | pd.DataFrame, y: Tensor | np.ndarray | pd.DataFrame | pd.Series) -> Tensor:
+        """ scikit-learn like fit_predict method """
+        x, y = self._validate_x_y(x, y)
         tensor_dataset = TensorDataset(x, y)
         train_dataset, validation_dataset = random_split(tensor_dataset, [1 - self.validation_fraction, self.validation_fraction])
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
@@ -145,19 +174,31 @@ class QModel(Module, BaseEstimator):
 
         return np.mean(losses)
 
-    def predict(self, x: Tensor | np.ndarray) -> Tensor:
+    def predict(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
         """ scikit-learn like predict method """
-        if isinstance(x, np.ndarray):
-            x = torch.tensor(x, dtype=torch.float32)
-        x = x.to(self.device)
+        x = self._validate_x(x)
         self.eval()
         with torch.inference_mode():
             return self(x).cpu()
 
+    def get_params(self) -> dict:
+        """" returns values of constructor parameters """
+        return {
+            "layers": self.layers,
+            "optimizer_type": self.optimizer_type,
+            "loss": self.loss,
+            "batch_size": self.batch_size,
+            "epochs": self.epochs,
+            "validation_fraction": self.validation_fraction,
+            "shuffle": self.shuffle,
+            "device": self.device
+        }
+
     def set_params(self, **params):
+        """ scikit-learn like param setting method"""
         if not params:
             return self
-        valid_params = self.get_params(deep=False)
+        valid_params = self.get_params()
         for key, value in params.items():
             if key not in valid_params:
                 raise ValueError(
