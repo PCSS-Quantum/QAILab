@@ -1,4 +1,4 @@
 """ Torch plugin for QLearning """
-from .qlayer import QLayer
+from .qlayer import QLayer, ExpQLayer
 
-__all__ = ["QLayer"]
+__all__ = ['QLayer', 'ExpQLayer']

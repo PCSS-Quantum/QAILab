@@ -11,7 +11,6 @@ from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 from qlearning.torch.autograd import ExpVQCFunction
-from qlearning.utils import distribution_to_array
 Isometry.__init__.__defaults__ = (1e-6,)  # FIXME: If anyone has any idea, feel free
 
 
@@ -77,7 +76,12 @@ class ExpQLayer(QLayer):
     """ Implementation of QLayer with distribution as an output """
 
     def forward(self, input_tensor: Tensor) -> Tensor:
-        return ExpVQCFunction.apply(input_tensor, self.weight[:, 0], self.launcher_forward, self.launcher_backward)
-
-    def _postprocess(self, result: Result):
-        return distribution_to_array(result.distribution)
+        # Assume batched input
+        return torch.stack([
+            torch.tensor(
+                ExpVQCFunction.apply(
+                    batch_element,
+                    self.weight[:, 0],
+                    self.launcher_forward,
+                    self.launcher_backward
+                )) for batch_element in input_tensor])
