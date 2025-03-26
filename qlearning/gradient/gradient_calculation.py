@@ -1,4 +1,4 @@
-"""Derivative calculation for parameterized quantum circuits."""
+"""Gradient and partial derivative calculation methods for parameterized quantum circuits."""
 from typing import Literal
 
 import numpy as np
@@ -25,7 +25,7 @@ def calculate_jacobian(
     circuit: QuantumCircuit,
     set_params: dict[Parameter, int | float],
     backend: Backend,
-    method: Literal['param_shift', 'spsa', 'lin_comb', 'fin_diff'] = 'param_shift',
+    method: Literal['param_shift', 'spsa', 'lin_comb'] = 'param_shift',
     shots: int = 1024
 ) -> np.ndarray:
     """
@@ -68,7 +68,7 @@ def calculate_gradients_compatible(
     circuit: QuantumCircuit,
     set_params: dict[Parameter, int | float],
     backend: QiskitBackend,
-    method: Literal['param_shift', 'spsa', 'lin_comb', 'fin_diff'] = 'param_shift',
+    method: Literal['param_shift', 'spsa', 'lin_comb'] = 'param_shift',
     shots: int = 1024
 ):
     """
@@ -113,7 +113,7 @@ def calculate_gradients_incompatible(
     shots: int = 1024,
     epsilon: float = 0.01
 ):
-    r"""
+    """
     Calculate gradients for parameters in incompatible gates, e.g. amplitude encoding parameters.
     Calculation is done using the standard derivative formula (f(x+h) - f(x))/h
 

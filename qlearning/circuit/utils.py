@@ -34,3 +34,25 @@ def filter_params(circuit: QuantumCircuit, param_type: Literal['input', 'weight'
         Sequence[Parameter]: Parameters of type param_type.
     """
     return [p for p in circuit.parameters if p.name.startswith(param_type)]
+
+
+def assign_input_weight(
+    circuit: QuantumCircuit,
+    inputs: Sequence[float] | np.ndarray,
+    weights: Sequence[float] | np.ndarray
+) -> dict[Parameter, float]:
+    """
+    Generate assignment of input and weight parameters for a given circuit.
+
+    Args:
+        circuit (QuantumCircuit): Parameterized circuit.
+        inputs (Sequence[float] | np.ndarray): Input values.
+        weights (Sequence[float] | np.ndarray): Weight values.
+
+    Returns:
+        dict[Parameter, float]: Combined parameter assignment.
+    """
+    return {
+        **param_map(filter_params(circuit, 'input'), inputs),
+        **param_map(filter_params(circuit, 'weight'), weights),
+    }

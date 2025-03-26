@@ -10,7 +10,7 @@ from qlearning.gradient.gradient_calculation import calculate_jacobian
 class BackwardPass(ForwardPass):
     """ Backward Pass, calculates two jacobian matrices: w.r.t. to input and w.r.t. weights"""
 
-    def __init__(self, gradient_method: Literal['param_shift', 'spsa', 'lin_comb', 'fin_diff'] = 'param_shift', shots: int = 1024) -> None:
+    def __init__(self, gradient_method: Literal['param_shift', 'spsa', 'lin_comb'] = 'param_shift', shots: int = 1024) -> None:
         self.gradient_method = gradient_method
         self.shots = shots
         super().__init__()
@@ -46,4 +46,4 @@ class BackwardPass(ForwardPass):
             self.shots
         )
 
-        return Result('', 0, '', 0, {}, {}, self.shots, 0, 0, {'input': input_jacobian, 'weights': weight_jacobian})
+        return Result('', 0, '', 0, {}, {}, self.shots, 0, 0, {'input': input_jacobian, 'weight': weight_jacobian})

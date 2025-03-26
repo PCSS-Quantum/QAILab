@@ -3,7 +3,7 @@ from quantum_launcher import QuantumLauncher, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
 from qlearning.circuit import RotationalEncoder, build_circuit
-from qlearning.circuit.utils import param_map, filter_params
+from qlearning.circuit.utils import param_map, filter_params, assign_input_weight
 from qlearning.qlauncher import CircuitProblem, ForwardPass
 
 
@@ -20,10 +20,11 @@ def test_runs_forward():
     be = QiskitBackend('local_simulator')
 
     ql = QuantumLauncher(circp, algo, be)
-    m = {
-        **param_map(filter_params(c, 'weight'), [0, 0]),
-        **param_map(filter_params(c, 'input'), [0, 0])
-    }
+    m = assign_input_weight(
+        c,
+        [0, 0],
+        [0, 0]
+    )
     res = ql.run(
         parameters=m,
         initial_state=[0, 1, 0, 0]

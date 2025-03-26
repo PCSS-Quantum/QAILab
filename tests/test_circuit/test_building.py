@@ -8,7 +8,7 @@ from qlearning.circuit.base import CircuitBlock
 from qlearning.circuit.layer_blocks import CXEntangler
 from qlearning.circuit.encoding_blocks import RotationalEncoder
 from qlearning.circuit.circuit_builder import build_circuit
-from qlearning.circuit.utils import param_map, filter_params
+from qlearning.circuit.utils import param_map, filter_params, assign_input_weight
 
 
 def test_builder():
@@ -46,10 +46,11 @@ def test_block_with_aux_qubits():
 def test_first_qubit_measurements():
     """Test if correct num of qubits get measured"""
     c = build_circuit(3, [RotationalEncoder('z', 'input'), RotationalEncoder('y', 'weight'), CXEntangler()], [0])
-    m = {
-        **param_map(filter_params(c, 'weight'), np.random.uniform(-1, 1, (3,)).tolist()),
-        **param_map(filter_params(c, 'input'), [1, -1, 2])
-    }
+    m = assign_input_weight(
+        c,
+        [1, -1, 2],
+        np.random.uniform(-1, 1, (3,)).tolist()
+    )
     res = Sampler().run(
         c.assign_parameters(m)
     )
@@ -60,10 +61,11 @@ def test_first_qubit_measurements():
 def test_all_qubit_measurement():
     """Test if correct num of qubits get measured"""
     c = build_circuit(3, [RotationalEncoder('x', 'input'), RotationalEncoder('z', 'weight'), CXEntangler()])
-    m = {
-        **param_map(filter_params(c, 'weight'), np.random.uniform(-1, 1, (3,)).tolist()),
-        **param_map(filter_params(c, 'input'), [1, -1, 2])
-    }
+    m = assign_input_weight(
+        c,
+        [1, -1, 2],
+        np.random.uniform(-1, 1, (3,)).tolist()
+    )
     res = Sampler().run(
         c.assign_parameters(m)
     )

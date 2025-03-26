@@ -5,7 +5,7 @@ from quantum_launcher import QuantumLauncher, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
 from qlearning.circuit import build_circuit, RotationalEncoder
-from qlearning.circuit.utils import param_map, filter_params
+from qlearning.circuit.utils import param_map, filter_params, assign_input_weight
 from qlearning.qlauncher import CircuitProblem, BackwardPass
 
 
@@ -29,10 +29,7 @@ def test_runs_backward():
 
     res = ql.run(
         auto_bind=False,
-        parameters={
-            **param_map(input_params, layer_input),
-            **param_map(weight_params, weights)
-        }
+        parameters=assign_input_weight(circp.instance, layer_input, weights)
     )
     assert isinstance(res, Result)
     assert isinstance(res.result, dict)

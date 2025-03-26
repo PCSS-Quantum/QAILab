@@ -1,4 +1,4 @@
-"""Autograd extensions for VQCs"""
+"""Autograd functions for VQCs"""
 import numpy as np
 
 import torch
@@ -8,7 +8,7 @@ from torch.autograd.function import once_differentiable
 from quantum_launcher import QuantumLauncher
 
 from qlearning.utils import distribution_to_array
-from qlearning.circuit.utils import param_map, filter_params
+from qlearning.circuit.utils import filter_params, assign_input_weight
 
 # * Using template code from torch generates weird linter errors,
 # * might have to investigate later, ignoring for now as everything seems to work correctly.
@@ -26,16 +26,14 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         weight: torch.Tensor,
         launcher_forward: QuantumLauncher,
     ) -> torch.Tensor:
-        input_params = filter_params(launcher_forward.problem.instance, 'input')
-        weight_params = filter_params(launcher_forward.problem.instance, 'weight')
-
         fn_in_numpy = fn_in.cpu().detach().numpy()
         weight_numpy = weight.cpu().detach().numpy()
 
-        params = {
-            **param_map(input_params, fn_in_numpy),
-            **param_map(weight_params, weight_numpy)
-        }
+        params = assign_input_weight(
+            launcher_forward.problem.instance,
+            fn_in_numpy,
+            weight_numpy
+        )
         res = launcher_forward.run(parameters=params)
         arr = distribution_to_array(res.distribution)
         t = torch.tensor(arr, dtype=fn_in.dtype, requires_grad=True).to(fn_in.device)
@@ -64,9 +62,9 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
             torch.Tensor: Distribution of forward pass.
         """
 
-        batch = _is_batch_input(fn_in, len(filter_params(launcher_forward.problem.instance, 'input')))
+        is_batch = _is_batch_input(fn_in, len(filter_params(launcher_forward.problem.instance, 'input')))
 
-        if batch:
+        if is_batch:
             return torch.stack([ExpVQCFunction._forward_single(single_in, weight, launcher_forward) for single_in in fn_in])
         return ExpVQCFunction._forward_single(fn_in, weight, launcher_forward)
 
@@ -93,23 +91,21 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         launcher_backward,
         grad_output
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        input_params = filter_params(launcher_backward.problem.instance, 'input')
-        weight_params = filter_params(launcher_backward.problem.instance, 'weight')
-
         fn_in_numpy = fn_in.cpu().detach().numpy()
         weight_numpy = weight.cpu().detach().numpy()
 
-        params = {
-            **param_map(input_params, fn_in_numpy),
-            **param_map(weight_params, weight_numpy)
-        }
+        params = assign_input_weight(
+            launcher_backward.problem.instance,
+            fn_in_numpy,
+            weight_numpy
+        )
 
         res = launcher_backward.run(parameters=params, auto_bind=False)
 
         out_grad_numpy = grad_output.cpu().detach().numpy()
 
         grad_input = res.result['input'] @ out_grad_numpy
-        grad_weight = res.result['weights'] @ out_grad_numpy
+        grad_weight = res.result['weight'] @ out_grad_numpy
 
         # Scale gradient values because we are optimizing weights initialized in range <0,2pi>
         return (

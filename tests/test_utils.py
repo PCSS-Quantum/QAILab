@@ -2,7 +2,7 @@
 from qiskit.circuit import QuantumCircuit, Parameter
 
 from qlearning.utils import number_to_bit_tuple
-from qlearning.circuit.utils import param_map, filter_params
+from qlearning.circuit.utils import param_map, filter_params, assign_input_weight
 
 
 def test_number_to_bit_tuple():
@@ -30,3 +30,13 @@ def test_param_map():
     vals = [1, 2, 3]
 
     assert param_map([p1, p2, p3], vals) == {p1: 1, p2: 2, p3: 3}
+
+
+def test_assign_input_weight():
+    """Test if input and weight are assigned correctly"""
+    p1, p2 = Parameter("input_p"), Parameter("weight_p")
+    c = QuantumCircuit(1)
+    c.rx(p1, 0)
+    c.rx(p2, 0)
+
+    assert assign_input_weight(c, [1], [1]) == {p1: 1, p2: 1}
