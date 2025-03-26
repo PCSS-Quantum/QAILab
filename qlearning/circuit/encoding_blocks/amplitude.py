@@ -1,10 +1,9 @@
 """Blocks encoding values as initial state for a quantum circuit"""
-from typing import Literal, Sequence
+from typing import Literal
 from qiskit.circuit import QuantumCircuit, ParameterVector
-from qiskit.circuit.quantumcircuit import QubitSpecifier
 from qiskit_machine_learning.circuit.library import RawFeatureVector
 
-from qlearning.circuit.base import EncodingBlock
+from qlearning.circuit.base import EncodingBlock, NonGateBlock
 
 
 class TypedRawFeatureVector(RawFeatureVector):
@@ -15,7 +14,7 @@ class TypedRawFeatureVector(RawFeatureVector):
         self._ordered_parameters = ParameterVector(f"{block_type}_Amp_Encoder_Params_{hex(id(super()))}")
 
 
-class AmplitudeEncoder(EncodingBlock):
+class AmplitudeEncoder(NonGateBlock, EncodingBlock):
     """
     Encode input as initial state of the circuit.
     """
@@ -26,13 +25,3 @@ class AmplitudeEncoder(EncodingBlock):
     def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
         circuit = TypedRawFeatureVector(2**num_qubits, self.block_type)
         return circuit
-
-    def add_to_circuit(self, circuit: QuantumCircuit, qargs: Sequence[QubitSpecifier] | None = None) -> None:
-        if qargs is None:
-            qargs = list(range(circuit.num_qubits))
-        else:
-            qargs = list(qargs)
-
-        c = self._build_circuit(len(qargs))
-
-        circuit.compose(c, qargs, inplace=True)
