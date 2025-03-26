@@ -4,7 +4,6 @@ from typing import Literal
 import numpy as np
 
 from qiskit import QuantumCircuit
-from qiskit.primitives import Sampler
 from qiskit.circuit import Parameter
 from qiskit_algorithms.gradients import (
     BaseSamplerGradient,
@@ -12,7 +11,6 @@ from qiskit_algorithms.gradients import (
     SPSASamplerGradient,
     FiniteDiffSamplerGradient,
     ParamShiftSamplerGradient,
-    # SamplerGradientResult
 )
 
 from quantum_launcher.base.base import Backend
@@ -63,8 +61,7 @@ def calculate_jacobian(
 
     num_possible_values = 2**circuit.num_clbits
 
-    #! TODO: change this sampler to backend sampler when adapter is fixed!!!!
-    gradient_calc: BaseSamplerGradient = gradient_type(Sampler())
+    gradient_calc: BaseSamplerGradient = gradient_type(backend.samplerV1)
 
     params, values = zip(*list(set_params.items()))
 

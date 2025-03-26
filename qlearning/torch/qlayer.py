@@ -77,11 +77,12 @@ class ExpQLayer(QLayer):
 
     def forward(self, input_tensor: Tensor) -> Tensor:
         # Assume batched input
-        return torch.stack([
-            torch.tensor(
-                ExpVQCFunction.apply(
-                    batch_element,
-                    self.weight[:, 0],
-                    self.launcher_forward,
-                    self.launcher_backward
-                )) for batch_element in input_tensor])
+        tens = ExpVQCFunction.apply(
+            input_tensor,
+            self.weight[:, 0],
+            self.launcher_forward,
+            self.launcher_backward
+        )
+        if not isinstance(tens, torch.Tensor):
+            raise ValueError("Function did not return tensor output")
+        return tens

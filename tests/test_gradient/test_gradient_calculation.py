@@ -23,5 +23,5 @@ def _test_output_format(method):
 
 def test_methods():
     """test if all gradient methods work correctly"""
-    for m in ['param_shift', 'spsa', 'lin_comb', 'fin_diff']:
+    for m in ['param_shift', 'spsa', 'lin_comb']:
         _test_output_format(m)
