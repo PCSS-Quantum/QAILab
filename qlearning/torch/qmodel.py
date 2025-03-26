@@ -1,6 +1,7 @@
 """ Module with QModel """
 from collections.abc import Callable
 from typing import Literal
+from sklearn.base import BaseEstimator
 import torch
 from torch import Tensor, optim, nn
 from torch.optim import Optimizer
@@ -9,19 +10,17 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
-from qlearning.torch.qlayer import QLayer
-
-available_optimizers: dict[str, type[Optimizer]] = {opt.__name__.lower(): opt for opt in [
+AVAILABLE_OPTIMIZERS: dict[str, type[Optimizer]] = {opt.__name__.lower(): opt for opt in [
     optim.Adam, optim.AdamW, optim.SGD, optim.Adadelta, optim.Adagrad, optim.Adamax, optim.RMSprop, optim.Rprop, optim.LBFGS]}
 
 
-class QModel(nn.Module):
+class QModel(nn.Module, BaseEstimator):
     """ Quantum model class """
-    layers: nn.ModuleList
+    module: nn.Module
+    loss: Callable
     optimizer_type: type[Optimizer]
     optimizer: Optimizer
-    learning_rate: float | None
-    loss: Callable
+    learning_rate: float | Literal['auto']
     batch_size: int
     epochs: int
     validation_fraction: float
@@ -30,10 +29,10 @@ class QModel(nn.Module):
 
     def __init__(
         self,
-        layers: list[nn.Module],
-        optimizer_type: type[Optimizer] | str | None = None,
-        learning_rate: float | None = None,
-        loss: Callable | None = None,
+        module: nn.Module,
+        loss: Callable,
+        optimizer_type: type[Optimizer] | str = 'adamw',
+        learning_rate: float | Literal['auto'] = 'auto',
         batch_size: int = 1,
         epochs: int = 1,
         validation_fraction: float = 0.2,
@@ -41,24 +40,20 @@ class QModel(nn.Module):
         device: Literal["cpu", "cuda", "mps"] = "cpu"
     ):
         super().__init__()
-        self.layers = nn.ModuleList(layers)
-        if optimizer_type is None:
-            optimizer_type = optim.AdamW
+        self.module = module
+        self.loss = loss
         if isinstance(optimizer_type, str):
             try:
-                optimizer_type = available_optimizers[optimizer_type]
+                optimizer_type = AVAILABLE_OPTIMIZERS[optimizer_type]
             except ValueError as e:
                 raise ValueError(
-                    f"Unknown optimizer: {optimizer_type}. Available optimizers are: {list(available_optimizers.keys())}") from e
+                    f"Unknown optimizer: {optimizer_type}. Available optimizers are: {list(AVAILABLE_OPTIMIZERS.keys())}") from e
         self.optimizer_type = optimizer_type
         self.learning_rate = learning_rate
-        if learning_rate is not None:
-            self.optimizer = optimizer_type(self.parameters(), lr=learning_rate)  # type: ignore
+        if self.learning_rate == 'auto':
+            self.optimizer = self.optimizer_type(self.module.parameters())  # type: ignore
         else:
-            self.optimizer = self.optimizer_type(self.parameters())  # type: ignore
-        if loss is None:
-            loss = nn.MSELoss()
-        self.loss = loss
+            self.optimizer = self.optimizer_type(self.module.parameters(), lr=self.learning_rate)  # type: ignore
         self.batch_size = batch_size
         self.epochs = epochs
         self.validation_fraction = validation_fraction
@@ -68,19 +63,17 @@ class QModel(nn.Module):
 
     def reset_parameters(self) -> None:
         """ Resets parameters of QLayers """
-        for layer in self.layers:
-            if isinstance(layer, QLayer):
-                layer.reset_parameters()
+        for layer in self.module.modules():
+            if hasattr(layer, "reset_parameters"):
+                layer.reset_parameters()  # type: ignore
 
     def forward(self, input_tensor: Tensor) -> Tensor:
         """ Forward """
-        for layer in self.layers:
-            input_tensor = layer(input_tensor)
-        return input_tensor
+        return self.module(input_tensor)
 
     def fit(self, x: Tensor | np.ndarray | pd.DataFrame, y: Tensor | np.ndarray | pd.DataFrame | pd.Series) -> "QModel":
         """ scikit-learn like fit method """
-        x, y = self._validate_x_y(x, y)
+        x, y = self._x_y_to_tensor(x, y)
         tensor_dataset = TensorDataset(x, y)
         train_dataset, validation_dataset = random_split(tensor_dataset, [1 - self.validation_fraction, self.validation_fraction])
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
@@ -88,7 +81,7 @@ class QModel(nn.Module):
         self._train_loop(train_loader, validation_loader, self.epochs)
         return self
 
-    def _validate_x(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
+    def _x_to_tensor(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
         if isinstance(x, np.ndarray):
             x = torch.tensor(x, dtype=torch.float32)
         if isinstance(x, pd.DataFrame):
@@ -96,21 +89,18 @@ class QModel(nn.Module):
         x = x.to(self.device)
         return x
 
-    def _validate_x_y(
+    def _x_y_to_tensor(
         self,
         x: Tensor | np.ndarray | pd.DataFrame,
         y: Tensor | np.ndarray | pd.DataFrame | pd.Series
 
     ) -> tuple[Tensor, Tensor]:
-        if isinstance(x, np.ndarray):
-            x = torch.tensor(x, dtype=torch.float32)
+        x = self._x_to_tensor(x)
         if isinstance(y, np.ndarray):
             if y.dtype.kind == "i":
                 y = torch.tensor(y, dtype=torch.int64)
             else:
                 y = torch.tensor(y, dtype=torch.float32)
-        if isinstance(x, pd.DataFrame):
-            x = torch.tensor(x.values, dtype=torch.float32)
         if isinstance(y, pd.DataFrame):
             y = torch.tensor(y.values, dtype=torch.float32)
         if isinstance(y, pd.Series):
@@ -120,21 +110,13 @@ class QModel(nn.Module):
                 y = torch.tensor(y.values, dtype=torch.float32)
         if x.shape[0] != y.shape[0]:
             raise ValueError("X and y tensors should have the same first dimension")
-        x = x.to(self.device)
         y = y.to(self.device)
         return x, y
 
     def fit_predict(self, x: Tensor | np.ndarray | pd.DataFrame, y: Tensor | np.ndarray | pd.DataFrame | pd.Series) -> Tensor:
         """ scikit-learn like fit_predict method """
-        x, y = self._validate_x_y(x, y)
-        tensor_dataset = TensorDataset(x, y)
-        train_dataset, validation_dataset = random_split(tensor_dataset, [1 - self.validation_fraction, self.validation_fraction])
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
-        validation_loader = DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
-        self._train_loop(train_loader, validation_loader, self.epochs)
-        self.eval()
-        with torch.inference_mode():
-            return self(x).cpu()
+        self.fit(x, y)
+        return self.predict(x)
 
     def _train_loop(self, train_loader: DataLoader, validation_loader: DataLoader, epochs: int):
         pbar = tqdm(range(epochs), total=epochs, unit="epochs")
@@ -177,34 +159,22 @@ class QModel(nn.Module):
 
     def predict(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
         """ scikit-learn like predict method """
-        x = self._validate_x(x)
+        x = self._x_to_tensor(x)
         self.eval()
         with torch.inference_mode():
             return self(x).cpu()
-
-    def get_params(self) -> dict:
-        """" returns values of constructor parameters """
-        return {
-            "layers": self.layers,
-            "optimizer_type": self.optimizer_type,
-            "learning_rate": self.learning_rate,
-            "loss": self.loss,
-            "batch_size": self.batch_size,
-            "epochs": self.epochs,
-            "validation_fraction": self.validation_fraction,
-            "shuffle": self.shuffle,
-            "device": self.device
-        }
 
     def set_params(self, **params):
         """ scikit-learn like param setting method"""
 
         def _update_optimizer():
-            self.optimizer = self.optimizer_type(self.parameters()) if self.learning_rate is None else self.optimizer_type(  # type: ignore
+            self.optimizer = self.optimizer_type(
+                self.parameters()) if self.learning_rate == "auto" else self.optimizer_type(  # type: ignore
                 self.parameters(), lr=self.learning_rate)  # type: ignore
+
         if not params:
             return self
-        valid_params = self.get_params()
+        valid_params = self.get_params(deep=False)
         for key, value in params.items():
             if key not in valid_params:
                 raise ValueError(
@@ -220,7 +190,7 @@ class QModel(nn.Module):
             if key == "learning_rate":
                 self.learning_rate = value
                 _update_optimizer()
-            if key == "layers":
-                self.layers = nn.ModuleList(value)
+            if key == "module":
+                self.module = value
                 _update_optimizer()
         return self
