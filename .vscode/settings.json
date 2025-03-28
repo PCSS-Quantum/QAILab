@@ -2,12 +2,16 @@
     "cSpell.words": [
         "cuda",
         "cudnn",
+        "httpx",
+        "kaiming",
         "networkx",
         "pylint",
         "qiskit",
+        "qlauncher",
         "qlearning",
         "sdist",
         "setuptools",
+        "Statevector",
         "sympy",
         "venv",
         "virtualenv"

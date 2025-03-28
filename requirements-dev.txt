@@ -1,5 +1,6 @@
 # Linter
 pylint
+pre-commit
 
 # Testing
 pytest

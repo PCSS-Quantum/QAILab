@@ -3,8 +3,11 @@ name = "qlearning"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = []
+requires-python = ">=3.12"
+dependencies = [
+    "qiskit>=1.4.0",
+    "torch>=2.5.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -12,3 +15,8 @@ include = ["qlearning/*"]
 
 [project.optional-dependencies]
 test = ["pytest", "pylint", "pre-commit"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]

@@ -6,24 +6,26 @@ workflow:
 
 before_script:
   - python --version ; pip --version
-  - pip install virtualenv
-  - virtualenv .venv
+  - apt-get update
+  - apt-get upgrade -y
+  - apt-get install -y git
+  - pip install uv
+  - uv venv .venv
   - source .venv/bin/activate
-  - pip install --upgrade pip
-  - pip install -r requirements-dev.txt
+  - uv pip install git+https://${QLauncher_TOKEN}:${QLauncher_PASSWORD}@gitlab.pcss.pl/quantum/psnc-sdk/launcher.git@QL-2.0[qiskit,pilotjob,cirq]
+  - uv pip install -r requirements.txt
+  - uv pip install -r requirements-dev.txt
 
 stages:
-  - code analysis
-  - tests
+  - code analysis and testing
 
 pylint:
-  stage: code analysis
+  stage: code analysis and testing
   script:
     - pylint qlearning
     - pylint examples
 
 pytest:
-  stage: tests
+  stage: code analysis and testing
   script:
-    - pip install --editable .
     - pytest -v tests
