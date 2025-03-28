@@ -43,11 +43,10 @@ class QModel(nn.Module, BaseEstimator):
         self.module = module
         self.loss = loss
         if isinstance(optimizer_type, str):
-            try:
-                optimizer_type = AVAILABLE_OPTIMIZERS[optimizer_type]
-            except ValueError as e:
+            if optimizer_type not in AVAILABLE_OPTIMIZERS:
                 raise ValueError(
-                    f"Unknown optimizer: {optimizer_type}. Available optimizers are: {list(AVAILABLE_OPTIMIZERS.keys())}") from e
+                    f"Unknown optimizer: {optimizer_type}. Available optimizers are: {list(AVAILABLE_OPTIMIZERS.keys())}")
+            optimizer_type = AVAILABLE_OPTIMIZERS[optimizer_type]
         self.optimizer_type = optimizer_type
         self.learning_rate = learning_rate
         if self.learning_rate == 'auto':
@@ -84,7 +83,7 @@ class QModel(nn.Module, BaseEstimator):
     def _x_to_tensor(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
         if isinstance(x, np.ndarray):
             x = torch.tensor(x, dtype=torch.float32)
-        if isinstance(x, pd.DataFrame):
+        elif isinstance(x, pd.DataFrame):
             x = torch.tensor(x.values, dtype=torch.float32)
         x = x.to(self.device)
         return x
@@ -101,9 +100,9 @@ class QModel(nn.Module, BaseEstimator):
                 y = torch.tensor(y, dtype=torch.int64)
             else:
                 y = torch.tensor(y, dtype=torch.float32)
-        if isinstance(y, pd.DataFrame):
+        elif isinstance(y, pd.DataFrame):
             y = torch.tensor(y.values, dtype=torch.float32)
-        if isinstance(y, pd.Series):
+        elif isinstance(y, pd.Series):
             if y.dtype == np.dtype('int64'):
                 y = torch.tensor(y.values, dtype=torch.int64)
             else:
@@ -123,7 +122,7 @@ class QModel(nn.Module, BaseEstimator):
         for epoch in pbar:
 
             self.train()
-            _ = self._train_one_epoch(train_loader)
+            self._train_one_epoch(train_loader)
 
             self.eval()
             with torch.inference_mode():
@@ -162,7 +161,8 @@ class QModel(nn.Module, BaseEstimator):
         x = self._x_to_tensor(x)
         self.eval()
         with torch.inference_mode():
-            return self(x).cpu()
+            result = self(x).cpu()
+        return result
 
     def set_params(self, **params):
         """ scikit-learn like param setting method"""
@@ -186,13 +186,13 @@ class QModel(nn.Module, BaseEstimator):
             if key == "device":
                 self.device = value
                 self.to(self.device)
-            if key == "optimizer_type":
+            elif key == "optimizer_type":
                 self.optimizer_type = value
                 _update_optimizer()
-            if key == "learning_rate":
+            elif key == "learning_rate":
                 self.learning_rate = value
                 _update_optimizer()
-            if key == "module":
+            elif key == "module":
                 self.module = value
                 _update_optimizer()
         return self
