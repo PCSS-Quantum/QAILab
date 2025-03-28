@@ -150,6 +150,8 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
 class ArgMax(Function):  # pylint: disable=abstract-method
     """
     ArgMax function. Propagates the sum of gradient on argmax index, rest is zero.
+
+    https://discuss.pytorch.org/t/differentiable-argmax/33020
     """
     @staticmethod
     def forward(fn_in):  # pylint: disable=arguments-differ
