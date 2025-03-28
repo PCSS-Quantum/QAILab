@@ -8,7 +8,8 @@ dependencies = [
     "qiskit>=1.4.0",
     "torch>=2.5.0",
     "tqdm",
-    "scikit-learn"
+    "scikit-learn",
+    "pandas"
 ]
 
 [tool.setuptools.packages.find]

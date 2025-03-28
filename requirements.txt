@@ -2,3 +2,4 @@ qiskit>=1.4
 torch>=2.5
 scikit-learn
 tqdm
+pandas
