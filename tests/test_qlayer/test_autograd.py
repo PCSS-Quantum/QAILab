@@ -8,7 +8,7 @@ from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 
-from qlearning.torch.autograd import ExpVQCFunction
+from qlearning.torch.autograd import ExpVQCFunction, ArgMax
 from qlearning.circuit import RotationalEncoder, build_circuit
 from qlearning.circuit.utils import filter_params
 
@@ -86,3 +86,12 @@ def test_autograd_opt():
         opt.step()
 
     assert loss_items[-1] < 0.01
+
+
+def test_autograd_diff_argmax():
+    t = torch.tensor([0.0, 1.0, 0.5])
+    argmax = ArgMax.apply(t)
+
+    assert isinstance(argmax, torch.Tensor)
+
+    assert argmax == 1
