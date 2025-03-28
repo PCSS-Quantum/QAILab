@@ -168,9 +168,11 @@ class QModel(nn.Module, BaseEstimator):
         """ scikit-learn like param setting method"""
 
         def _update_optimizer():
-            self.optimizer = self.optimizer_type(
-                self.parameters()) if self.learning_rate == "auto" else self.optimizer_type(  # type: ignore
-                self.parameters(), lr=self.learning_rate)  # type: ignore
+
+            if self.learning_rate == "auto":
+                self.optimizer = self.optimizer_type(self.parameters())  # type: ignore
+            else:
+                self.optimizer_type(self.parameters(), lr=self.learning_rate)  # type: ignore
 
         if not params:
             return self
