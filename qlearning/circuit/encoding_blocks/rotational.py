@@ -1,10 +1,12 @@
 """R-gate implementations of input vector encoding blocks for variational circuits."""
 from typing import Literal
+from collections.abc import Callable
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import ParameterVector
+from qiskit.circuit.library import RealAmplitudes
 
-from qlearning.circuit.base import EncodingBlock
+from qlearning.circuit.base import EncodingBlock, EntanglingBlock
 
 
 class RotationalEncoder(EncodingBlock):
@@ -39,3 +41,30 @@ class RotationalEncoder(EncodingBlock):
             fn(self._parameter_vector[i], i)
 
         return circuit
+
+
+class RealAmplitudesBlock(EncodingBlock, EntanglingBlock):
+    """
+    Block wrapper for RealAmplitudes from qiskit.circuit.library
+    """
+
+    def __init__(
+        self,
+        block_type: Literal['input', 'weight'],
+        entanglement: str | list[list[int]] | Callable[[int], list[int]] = "reverse_linear",
+        reps: int = 3,
+        skip_final_rotation_layer: bool = False
+    ) -> None:
+        self.entanglement = entanglement
+        self.reps = reps
+        self.skip_final_rotation_layer = skip_final_rotation_layer
+        super().__init__("RealAmplitudesEncoder", block_type)
+
+    def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
+        return RealAmplitudes(
+            num_qubits,
+            parameter_prefix=self.block_type,
+            entanglement=self.entanglement,
+            reps=self.reps,
+            skip_final_rotation_layer=self.skip_final_rotation_layer,
+        )
