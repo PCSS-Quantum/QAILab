@@ -9,11 +9,13 @@
         "qiskit",
         "qlauncher",
         "qlearning",
+        "scikit",
         "sdist",
         "setuptools",
         "SPSA",
         "Statevector",
         "sympy",
+        "tqdm",
         "venv",
         "virtualenv"
     ],
