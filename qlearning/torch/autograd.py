@@ -105,7 +105,8 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         out_grad_numpy = grad_output.cpu().detach().numpy()
 
         grad_input = res.result['input'] @ out_grad_numpy
-        grad_weight = res.result['weight'] @ out_grad_numpy
+        # Allow for weightless QNN layers
+        grad_weight = res.result['weight'] @ out_grad_numpy if len(res.result['weight']) > 0 else np.array([])
 
         # Scale gradient values because we are optimizing weights initialized in range <0,2pi>
         return (
