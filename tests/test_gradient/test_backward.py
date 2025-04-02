@@ -5,7 +5,7 @@ from quantum_launcher import QuantumLauncher, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
 from qlearning.circuit import build_circuit, RotationalEncoder
-from qlearning.circuit.utils import filter_params, assign_input_weight
+from qlearning.circuit.utils import assign_input_weight
 from qlearning.qlauncher import CircuitProblem, BackwardPass
 
 
