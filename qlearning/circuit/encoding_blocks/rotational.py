@@ -3,7 +3,6 @@ from typing import Literal
 from collections.abc import Callable
 
 from qiskit import QuantumCircuit
-from qiskit.circuit import ParameterVector
 from qiskit.circuit.library import RealAmplitudes
 
 from qlearning.circuit.base import EncodingBlock, EntanglingBlock
@@ -25,7 +24,7 @@ class RotationalEncoder(EncodingBlock):
     def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
         # Don't create new parameter vectors. This would enable the user to encode the same vector in different parts of the circuit.
         if self._parameter_vector is None:
-            self._parameter_vector = ParameterVector(f"{self.block_type}_R_Encoder_Params_{hex(id(super()))}", num_qubits)
+            self._parameter_vector = self._create_parameter_vector(num_qubits)
 
         circuit = QuantumCircuit(num_qubits)
         match self.r_gate_type:
@@ -61,9 +60,11 @@ class RealAmplitudesBlock(EncodingBlock, EntanglingBlock):
         super().__init__("RealAmplitudesEncoder", block_type)
 
     def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
+        pv_name = self._create_parameter_vector(1).name
+        self._parameter_vector = None
         return RealAmplitudes(
             num_qubits,
-            parameter_prefix=self.block_type,
+            parameter_prefix=pv_name,
             entanglement=self.entanglement,
             reps=self.reps,
             skip_final_rotation_layer=self.skip_final_rotation_layer,

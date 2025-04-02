@@ -93,6 +93,10 @@ class EncodingBlock(ParameterizedBlock, CircuitBlock, ABC):
         self.block_type = block_type
         super().__init__(name)
 
+    def _create_parameter_vector(self, size: int) -> ParameterVector:
+        self._parameter_vector = ParameterVector(f"{self.block_type}_{self.__class__.__name__}_Params_{hex(id(super()))}", size)
+        return self._parameter_vector
+
 
 class NonGateBlock(CircuitBlock, ABC):
     """Blocks that cannot be converted to gates, e.g. measurement."""
