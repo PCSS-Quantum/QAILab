@@ -17,8 +17,6 @@ def _prepare_circ():
 def test_runs_backward():
     """Test if backward pass returns correct results"""
     circp = _prepare_circ()
-    input_params = filter_params(circp.instance, 'input')
-    weight_params = filter_params(circp.instance, 'weight')
 
     layer_input = [2, 1]
     weights = [3, 7]
