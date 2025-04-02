@@ -8,8 +8,9 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
+
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
-from qlearning.utils import distribution_to_array
+from qlearning.torch.autograd import ExpVQCFunction
 Isometry.__init__.__defaults__ = (1e-6,)  # FIXME: If anyone has any idea, feel free
 
 
@@ -32,8 +33,16 @@ class QLayer(nn.Module):
         self.reset_parameters()
         self.circuit = circuit
         self.circuit_pr = CircuitProblem(self.circuit)
-        self.launcher_forward = QuantumLauncher(self.circuit_pr, ForwardPass(shots=shots), QiskitBackend('local_simulator'))
-        self.launcher_backward = QuantumLauncher(self.circuit_pr, BackwardPass('parameter-shift', shots=shots))
+        self.launcher_forward = QuantumLauncher(
+            self.circuit_pr,
+            ForwardPass(shots=shots),
+            QiskitBackend('local_simulator')
+        )
+        self.launcher_backward = QuantumLauncher(
+            self.circuit_pr,
+            BackwardPass('param_shift', shots=shots),
+            QiskitBackend('local_simulator')
+        )
 
     def reset_parameters(self) -> None:
         """ Parameter reset """
@@ -66,5 +75,14 @@ class QLayer(nn.Module):
 class ExpQLayer(QLayer):
     """ Implementation of QLayer with distribution as an output """
 
-    def _postprocess(self, result: Result):
-        return distribution_to_array(result.distribution)
+    def forward(self, input_tensor: Tensor) -> Tensor:
+        # Assume batched input
+        tens = ExpVQCFunction.apply(
+            input_tensor,
+            self.weight[:, 0],
+            self.launcher_forward,
+            self.launcher_backward
+        )
+        if not isinstance(tens, torch.Tensor):
+            raise ValueError("Function did not return tensor output")
+        return tens

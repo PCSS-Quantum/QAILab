@@ -12,6 +12,7 @@
         "scikit",
         "sdist",
         "setuptools",
+        "SPSA",
         "Statevector",
         "sympy",
         "tqdm",

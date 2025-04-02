@@ -1,5 +1,6 @@
 """ABC structure for circuit building blocks"""
 from abc import ABC, abstractmethod
+from typing import Literal
 from collections.abc import Sequence
 
 from qiskit import QuantumCircuit
@@ -81,4 +82,30 @@ class EntanglingBlock(CircuitBlock, ABC):
 
 
 class EncodingBlock(ParameterizedBlock, CircuitBlock, ABC):
-    """Blocks encoding some parameter vector (trainable or not)"""
+    """
+    Blocks encoding some parameter vector (trainable or not)
+
+    Attributes:
+        block_type (Literal['input', 'weight']): Whether this block encodes weights or inputs.
+    """
+
+    def __init__(self, name: str = 'unknown', block_type: Literal['input', 'weight'] = 'input') -> None:
+        self.block_type = block_type
+        super().__init__(name)
+
+
+class NonGateBlock(CircuitBlock, ABC):
+    """Blocks that cannot be converted to gates, e.g. measurement."""
+
+    def to_gate(self, num_qubits: int) -> Gate:
+        raise ValueError("This block cannot be converted to a gate.")
+
+    def add_to_circuit(self, circuit: QuantumCircuit, qargs: Sequence[QubitSpecifier] | None = None) -> None:
+        if qargs is None:
+            qargs = list(range(circuit.num_qubits))
+        else:
+            qargs = list(qargs)
+
+        c = self._build_circuit(len(qargs))
+
+        circuit.compose(c, qargs, inplace=True)

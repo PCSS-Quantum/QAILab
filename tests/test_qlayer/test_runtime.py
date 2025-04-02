@@ -127,8 +127,10 @@ def test_exp_layer():
     quantum_model = QuantumModel()
     loss_fn = nn.MSELoss()
     desired_result = torch.Tensor([0, 1])
-    test_input = torch.Tensor([-0.321, .31, 0.3, 2])
+    test_input = torch.Tensor([[-0.321, .31, 0.3, 2]])
     predictions = quantum_model(test_input)
     assert isinstance(predictions, torch.Tensor)
     loss = loss_fn(predictions, desired_result)
     assert isinstance(loss, torch.Tensor)
+
+    loss.backward()  # Test if calling backward generates no errors

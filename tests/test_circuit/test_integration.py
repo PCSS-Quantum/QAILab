@@ -1,27 +1,32 @@
+"""Test if circuit builder circuits run with passes"""
 from quantum_launcher import QuantumLauncher, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
 from qlearning.circuit import RotationalEncoder, build_circuit
+from qlearning.circuit.utils import assign_input_weight
 from qlearning.qlauncher import CircuitProblem, ForwardPass
 
 
-def prepare_circ():
-    c, x, w = build_circuit(2, [RotationalEncoder('x')], [RotationalEncoder('y')])
-    return CircuitProblem(c, 'test'), x, w
+def _prepare_circ():
+    c = build_circuit(2, [RotationalEncoder('x', 'input'), RotationalEncoder('y', 'weight')])
+    return CircuitProblem(c, 'test')
 
 
 def test_runs_forward():
-    circp, x, w = prepare_circ()
+    """Test forward pass integration"""
+    circp = _prepare_circ()
+    c = circp.instance
     algo = ForwardPass()
     be = QiskitBackend('local_simulator')
 
     ql = QuantumLauncher(circp, algo, be)
-
+    m = assign_input_weight(
+        c,
+        [0, 0],
+        [0, 0]
+    )
     res = ql.run(
-        parameters={
-            x[0]: [0, 0],
-            w[0]: [0, 0]
-        },
+        parameters=m,
         initial_state=[0, 1, 0, 0]
     )
     assert isinstance(res, Result)
