@@ -109,6 +109,7 @@ def test_argmax_layer():
 
 
 def test_unweighted_qlayer():
+    """Test if layers with no weights work as normal"""
     circ = qiskit.circuit.QuantumCircuit(2, 2)
     p1, p2 = qiskit.circuit.Parameter('input1'), qiskit.circuit.Parameter('input2')
     circ.rx(p1, 0)
