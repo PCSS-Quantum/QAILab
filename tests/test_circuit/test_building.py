@@ -8,7 +8,7 @@ from qlearning.circuit.base import CircuitBlock
 from qlearning.circuit.layer_blocks import CXEntangler
 from qlearning.circuit.encoding_blocks import RotationalEncoder
 from qlearning.circuit.circuit_builder import build_circuit
-from qlearning.circuit.utils import param_map, filter_params, assign_input_weight
+from qlearning.circuit.utils import filter_params, assign_input_weight
 
 
 def test_builder():
