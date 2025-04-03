@@ -4,7 +4,7 @@ from typing import Literal
 from collections.abc import Sequence
 
 from qiskit import QuantumCircuit
-from qiskit.circuit import ParameterVector, QuantumRegister
+from qiskit.circuit import ParameterVector, Parameter, QuantumRegister
 from qiskit.circuit.gate import Gate
 from qiskit.circuit.quantumcircuit import QubitSpecifier
 
@@ -66,15 +66,15 @@ class ParameterizedBlock(CircuitBlock, ABC):
     """
 
     def __init__(self, name: str = 'unknown') -> None:
-        self._parameter_vector = None
+        self._parameters: Sequence[Parameter] | None = None
         super().__init__(name)
 
     @property
-    def parameter_vector(self) -> ParameterVector:
+    def parameters(self) -> Sequence[Parameter]:
         """Get this block's parameter vector"""
-        if self._parameter_vector is None:
-            raise ValueError("No parameter vector, the block was not added to any circuit.")
-        return self._parameter_vector
+        if self._parameters is None:
+            raise ValueError("No parameters, the block was not added to any circuit.")
+        return self._parameters
 
 
 class EntanglingBlock(CircuitBlock, ABC):
@@ -94,8 +94,8 @@ class EncodingBlock(ParameterizedBlock, CircuitBlock, ABC):
         super().__init__(name)
 
     def _create_parameter_vector(self, size: int) -> ParameterVector:
-        self._parameter_vector = ParameterVector(f"{self.block_type}_{self.__class__.__name__}_Params_{hex(id(super()))}", size)
-        return self._parameter_vector
+        parameter_vector = ParameterVector(f"{self.block_type}_{self.__class__.__name__}_Params_{hex(id(super()))}", size)
+        return parameter_vector
 
 
 class NonGateBlock(CircuitBlock, ABC):
