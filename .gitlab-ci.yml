@@ -12,7 +12,6 @@ before_script:
   - pip install uv
   - uv venv .venv
   - source .venv/bin/activate
-  - uv pip install git+https://${QLauncher_TOKEN}:${QLauncher_PASSWORD}@gitlab.pcss.pl/quantum/psnc-sdk/launcher.git@QL-2.0[qiskit,pilotjob,cirq]
   - uv pip install -r requirements.txt
   - uv pip install -r requirements-dev.txt
 

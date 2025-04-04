@@ -1,9 +1,10 @@
 """ABC structure for circuit building blocks"""
 from abc import ABC, abstractmethod
+from typing import Literal
 from collections.abc import Sequence
 
 from qiskit import QuantumCircuit
-from qiskit.circuit import ParameterVector, QuantumRegister
+from qiskit.circuit import ParameterVector, Parameter, QuantumRegister
 from qiskit.circuit.gate import Gate
 from qiskit.circuit.quantumcircuit import QubitSpecifier
 
@@ -65,15 +66,15 @@ class ParameterizedBlock(CircuitBlock, ABC):
     """
 
     def __init__(self, name: str = 'unknown') -> None:
-        self._parameter_vector = None
+        self._parameters: Sequence[Parameter] | None = None
         super().__init__(name)
 
     @property
-    def parameter_vector(self) -> ParameterVector:
+    def parameters(self) -> Sequence[Parameter]:
         """Get this block's parameter vector"""
-        if self._parameter_vector is None:
-            raise ValueError("No parameter vector, the block was not added to any circuit.")
-        return self._parameter_vector
+        if self._parameters is None:
+            raise ValueError("No parameters, the block was not added to any circuit.")
+        return self._parameters
 
 
 class EntanglingBlock(CircuitBlock, ABC):
@@ -81,4 +82,34 @@ class EntanglingBlock(CircuitBlock, ABC):
 
 
 class EncodingBlock(ParameterizedBlock, CircuitBlock, ABC):
-    """Blocks encoding some parameter vector (trainable or not)"""
+    """
+    Blocks encoding some parameter vector (trainable or not)
+
+    Attributes:
+        block_type (Literal['input', 'weight']): Whether this block encodes weights or inputs.
+    """
+
+    def __init__(self, name: str = 'unknown', block_type: Literal['input', 'weight'] = 'input') -> None:
+        self.block_type = block_type
+        super().__init__(name)
+
+    def _create_parameter_vector(self, size: int) -> ParameterVector:
+        parameter_vector = ParameterVector(f"{self.block_type}_{self.__class__.__name__}_Params_{hex(id(super()))}", size)
+        return parameter_vector
+
+
+class NonGateBlock(CircuitBlock, ABC):
+    """Blocks that cannot be converted to gates, e.g. measurement."""
+
+    def to_gate(self, num_qubits: int) -> Gate:
+        raise ValueError("This block cannot be converted to a gate.")
+
+    def add_to_circuit(self, circuit: QuantumCircuit, qargs: Sequence[QubitSpecifier] | None = None) -> None:
+        if qargs is None:
+            qargs = list(range(circuit.num_qubits))
+        else:
+            qargs = list(qargs)
+
+        c = self._build_circuit(len(qargs))
+
+        circuit.compose(c, qargs, inplace=True)
