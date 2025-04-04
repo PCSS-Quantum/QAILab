@@ -11,6 +11,7 @@ Usage
    :maxdepth: 1
 
    tutorials/classifier
+   tutorials/regressor
 
 --------------------
 Extending QLearning
