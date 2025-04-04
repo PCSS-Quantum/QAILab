@@ -93,9 +93,9 @@ class EncodingBlock(ParameterizedBlock, CircuitBlock, ABC):
         self.block_type = block_type
         super().__init__(name)
 
-    def _create_parameter_vector(self, size: int) -> ParameterVector:
+    def _create_parameters(self, size: int) -> Sequence[Parameter]:
         parameter_vector = ParameterVector(f"{self.block_type}_{self.__class__.__name__}_Params_{hex(id(super()))}", size)
-        return parameter_vector
+        return parameter_vector.params
 
 
 class NonGateBlock(CircuitBlock, ABC):
