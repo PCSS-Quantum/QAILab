@@ -4,14 +4,17 @@ from torch import nn
 import qiskit
 import qiskit.circuit
 
-from qlearning.torch.qlayer import QLayer, ExpQLayer
+from qlearning.torch import QLayer, ExpectedValueQLayer, ArgmaxQLayer
 
 
 def build_circuit() -> qiskit.QuantumCircuit:
     """ build example circuit """
+    inpt = qiskit.circuit.ParameterVector('input', 2)
     param = qiskit.circuit.ParameterVector('weight', 1)
     circuit = qiskit.QuantumCircuit(1, 1)
     circuit.rx(param[0], 0)
+    circuit.ry(inpt[0], 0)
+    circuit.ry(inpt[1], 0)
     circuit.measure(0, 0)
     return circuit
 
@@ -29,75 +32,29 @@ def build_circuit_param_based_input() -> qiskit.QuantumCircuit:
     return circuit
 
 
+def make_qmodel(qlayer_type: type[QLayer], circ) -> nn.Module:
+    class QuantumModel(nn.Module):
+        """ Hybrid model """
+
+        def __init__(self):
+            super().__init__()
+            ql = qlayer_type(circ)
+            self.net = torch.nn.Sequential(
+                nn.Linear(4, ql.in_features),
+                ql,
+                nn.Linear(ql.out_features, 1),
+            )
+
+        def forward(self, x):
+            """ Forward pass """
+            return self.net(x)
+
+    return QuantumModel()
+
+
 def test_runtime():
     """ Runtime test """
-    class QuantumModel(nn.Module):
-        """ QModel """
-
-        def __init__(self):
-            super().__init__()
-            self.net = torch.nn.Sequential(
-                QLayer(build_circuit()),
-            )
-
-        def forward(self, x):
-            """ Forward pass """
-            return self.net(x)
-    quantum_model = QuantumModel()
-    loss_fn = nn.MSELoss()
-    desired_result = torch.Tensor([1])
-    test_input = torch.Tensor([-0.11, .3, ])
-    predictions = quantum_model(test_input)
-    assert isinstance(predictions, torch.Tensor)
-    loss = loss_fn(predictions, desired_result)
-    assert isinstance(loss, torch.Tensor)
-
-
-def test_integration():
-    """ Integration with classical layers test """
-    class QuantumModel(nn.Module):
-        """ Hybrid model """
-
-        def __init__(self):
-            super().__init__()
-            self.net = torch.nn.Sequential(
-                nn.Linear(4, 2),
-                QLayer(build_circuit()),
-                nn.Linear(1, 1),
-            )
-
-        def forward(self, x):
-            """ Forward pass """
-            return self.net(x)
-
-    quantum_model = QuantumModel()
-    loss_fn = nn.MSELoss()
-    desired_result = torch.Tensor([1])
-    test_input = torch.Tensor([-0.111111, .3, 1, 1])
-    predictions = quantum_model(test_input)
-    assert isinstance(predictions, torch.Tensor)
-    loss = loss_fn(predictions, desired_result)
-    assert isinstance(loss, torch.Tensor)
-
-
-def test_parameter_input_encoding():
-    """ Testing if encoding input via parameters works properly """
-    class QuantumModel(nn.Module):
-        """ Hybrid model """
-
-        def __init__(self):
-            super().__init__()
-            self.net = torch.nn.Sequential(
-                nn.Linear(4, 2),
-                QLayer(build_circuit_param_based_input()),
-                nn.Linear(2, 1),
-            )
-
-        def forward(self, x):
-            """ Forward pass """
-            return self.net(x)
-
-    quantum_model = QuantumModel()
+    quantum_model = make_qmodel(QLayer, build_circuit())
     loss_fn = nn.MSELoss()
     desired_result = torch.Tensor([0, 1])
     test_input = torch.Tensor([-0.111111, .3, 1, 1])
@@ -106,25 +63,60 @@ def test_parameter_input_encoding():
     loss = loss_fn(predictions, desired_result)
     assert isinstance(loss, torch.Tensor)
 
+    loss.backward()  # Test if calling backward generates no errors
 
-def test_exp_layer():
+
+def test_parameter_input_encoding():
     """ Testing if encoding input via parameters works properly """
-    class QuantumModel(nn.Module):
-        """ Hybrid model """
 
-        def __init__(self):
-            super().__init__()
-            self.net = torch.nn.Sequential(
-                nn.Linear(4, 2),
-                ExpQLayer(build_circuit_param_based_input()),
-                nn.Linear(4, 1),
-            )
+    quantum_model = make_qmodel(QLayer, build_circuit_param_based_input())
+    loss_fn = nn.MSELoss()
+    desired_result = torch.Tensor([0, 1])
+    test_input = torch.Tensor([-0.111111, .3, 1, 1])
+    predictions = quantum_model(test_input)
+    assert isinstance(predictions, torch.Tensor)
+    loss = loss_fn(predictions, desired_result)
+    assert isinstance(loss, torch.Tensor)
 
-        def forward(self, x):
-            """ Forward pass """
-            return self.net(x)
+    loss.backward()  # Test if calling backward generates no errors
 
-    quantum_model = QuantumModel()
+
+def test_expected_value_layer():
+    """ Testing if encoding input via parameters works properly """
+    quantum_model = make_qmodel(ExpectedValueQLayer, build_circuit_param_based_input())
+    loss_fn = nn.MSELoss()
+    desired_result = torch.Tensor([0, 1])
+    test_input = torch.Tensor([[-0.321, .31, 0.3, 2]])
+    predictions = quantum_model(test_input)
+    assert isinstance(predictions, torch.Tensor)
+    loss = loss_fn(predictions, desired_result)
+    assert isinstance(loss, torch.Tensor)
+
+    loss.backward()  # Test if calling backward generates no errors
+
+
+def test_argmax_layer():
+    quantum_model = make_qmodel(ArgmaxQLayer, build_circuit_param_based_input())
+    loss_fn = nn.MSELoss()
+    desired_result = torch.Tensor([0, 1])
+    test_input = torch.Tensor([[-0.321, .31, 0.3, 2]])
+    predictions = quantum_model(test_input)
+    assert isinstance(predictions, torch.Tensor)
+    loss = loss_fn(predictions, desired_result)
+    assert isinstance(loss, torch.Tensor)
+
+    loss.backward()  # Test if calling backward generates no errors
+
+
+def test_unweighted_qlayer():
+    """Test if layers with no weights work as normal"""
+    circ = qiskit.circuit.QuantumCircuit(2, 2)
+    p1, p2 = qiskit.circuit.Parameter('input1'), qiskit.circuit.Parameter('input2')
+    circ.rx(p1, 0)
+    circ.rx(p2, 1)
+    circ.measure([0, 1], [0, 1])
+
+    quantum_model = make_qmodel(QLayer, circ)
     loss_fn = nn.MSELoss()
     desired_result = torch.Tensor([0, 1])
     test_input = torch.Tensor([[-0.321, .31, 0.3, 2]])

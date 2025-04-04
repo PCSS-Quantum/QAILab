@@ -6,7 +6,7 @@ from qiskit.primitives import Sampler
 
 from qlearning.circuit.base import CircuitBlock
 from qlearning.circuit.layer_blocks import CXEntangler
-from qlearning.circuit.encoding_blocks import RotationalEncoder
+from qlearning.circuit.encoding_blocks import RotationalEncoder, RealAmplitudesBlock
 from qlearning.circuit.circuit_builder import build_circuit
 from qlearning.circuit.utils import filter_params, assign_input_weight
 
@@ -79,3 +79,12 @@ def test_param_block_can_be_added_twice():
     c = build_circuit(3, [b, b])
 
     assert len(filter_params(c, 'input')) == 3
+
+
+def test_parameters_return():
+    """Test if parametrized blocks correctly return their params"""
+    b1 = RotationalEncoder('x', 'input')
+    b2 = RealAmplitudesBlock('weight')
+    c = build_circuit(2, [b1, b2])
+
+    assert set(list(b1.parameters) + list(b2.parameters)) == set(c.parameters)

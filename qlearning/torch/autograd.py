@@ -105,7 +105,8 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         out_grad_numpy = grad_output.cpu().detach().numpy()
 
         grad_input = res.result['input'] @ out_grad_numpy
-        grad_weight = res.result['weight'] @ out_grad_numpy
+        # Allow for weightless QNN layers
+        grad_weight = res.result['weight'] @ out_grad_numpy if len(res.result['weight']) > 0 else np.array([])
 
         # Scale gradient values because we are optimizing weights initialized in range <0,2pi>
         return (
@@ -145,3 +146,28 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
             weight_grads.append(wgrad)
 
         return torch.stack(input_grads), torch.stack(weight_grads), None, None
+
+
+class ArgMax(Function):  # pylint: disable=abstract-method
+    """
+    ArgMax function. Propagates the sum of gradient on argmax index, rest is zero.
+
+    https://discuss.pytorch.org/t/differentiable-argmax/33020
+    """
+    @staticmethod
+    def forward(fn_in):  # pylint: disable=arguments-differ
+        return torch.tensor(torch.argmax(fn_in, dim=-1, keepdim=True), dtype=fn_in.dtype, requires_grad=True)
+
+    @staticmethod
+    def setup_context(ctx, inputs, output):
+        ctx.save_for_backward(*inputs, output)
+
+    @staticmethod
+    def backward(  # pylint: disable=arguments-differ
+        ctx,
+        grad_output: torch.Tensor
+    ) -> tuple[torch.Tensor]:
+        fn_in, idx = ctx.saved_tensors
+        grad_input = torch.zeros(fn_in.shape, device=fn_in.device, dtype=fn_in.dtype)
+        grad_input.scatter_(-1, torch.tensor(idx, dtype=torch.int64), grad_output.sum(-1, keepdim=True))
+        return (grad_input,)

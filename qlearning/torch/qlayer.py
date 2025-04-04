@@ -2,87 +2,78 @@
 import math
 from torch import Tensor, nn
 import torch
-from quantum_launcher import QuantumLauncher, Result
+from quantum_launcher import QuantumLauncher
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
 from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
-
+from qlearning.circuit.utils import filter_params
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 from qlearning.torch.autograd import ExpVQCFunction
 Isometry.__init__.__defaults__ = (1e-6,)  # FIXME: If anyone has any idea, feel free
 
 
 class QLayer(nn.Module):
-    """ Base quantum layer class """
+    """
+    Base quantum layer class.
+
+    This layer will output 2^num_measured_qubits features,
+    which represent the distribution of measurements from the underlying quantum circuit.
+
+    The bitstring order is [0, 1, 2, ..., 2^num_measured_qubits-1]
+    """
     weight: Tensor
 
     def __init__(
         self,
         circuit: QuantumCircuit,
         *,
+        backend: QiskitBackend | None = None,
         shots: int = 1024,
     ) -> None:
         super().__init__()
-        self._input_parameters = list(filter(self._is_input_parameter, circuit.parameters)) or None
-        self.trainable_params = list(filter(lambda x: not self._is_input_parameter(x), circuit.parameters))
+
         self.weight = nn.Parameter(
-            torch.empty((len(self.trainable_params), 1))
+            torch.empty((len(filter_params(circuit, 'weight')), 1))
         )
         self.reset_parameters()
+
         self.circuit = circuit
         self.circuit_pr = CircuitProblem(self.circuit)
+
+        # Helper variables for hybrid networks
+        self.in_features = len(filter_params(circuit, 'input'))
+        self.out_features = 2**self.circuit.num_clbits
+
+        if backend is None:
+            backend = QiskitBackend('local_simulator')
+
         self.launcher_forward = QuantumLauncher(
             self.circuit_pr,
             ForwardPass(shots=shots),
-            QiskitBackend('local_simulator')
+            backend
         )
         self.launcher_backward = QuantumLauncher(
             self.circuit_pr,
             BackwardPass('param_shift', shots=shots),
-            QiskitBackend('local_simulator')
+            backend
         )
 
     def reset_parameters(self) -> None:
         """ Parameter reset """
         nn.init.uniform_(self.weight, 0, 2 * math.pi)
 
-    def forward(self, input_tensor: Tensor) -> Tensor:
-        """ Forward """
-        weight = self.weight.detach().cpu().numpy()  # pylint: disable=not-callable
-        parameters = dict(zip(self.trainable_params, weight[:, 0]))
-        input_array = input_tensor.detach().cpu().numpy()
-        if self._input_parameters is not None:
-            input_params = dict(zip(self._input_parameters, input_array))
-            parameters.update(input_params)
-            input_array = None
-        result = self.launcher_forward.run(initial_state=input_array, parameters=parameters)
-        output_array = self._postprocess(result)
-        return Tensor(output_array)
-
     def extra_repr(self) -> str:
         return f"{self.circuit}"
 
-    def _postprocess(self, result: Result):
-        return max(result.distribution, key=lambda x: result.distribution[x])
-
-    @staticmethod
-    def _is_input_parameter(parameter: Parameter) -> bool:
-        return parameter.name.startswith('input')
-
-
-class ExpQLayer(QLayer):
-    """ Implementation of QLayer with distribution as an output """
-
     def forward(self, input_tensor: Tensor) -> Tensor:
-        # Assume batched input
-        tens = ExpVQCFunction.apply(
+        """Forward run"""
+        out = ExpVQCFunction.apply(
             input_tensor,
             self.weight[:, 0],
             self.launcher_forward,
             self.launcher_backward
         )
-        if not isinstance(tens, torch.Tensor):
+        if not isinstance(out, torch.Tensor):
             raise ValueError("Function did not return tensor output")
-        return tens
+        return out
