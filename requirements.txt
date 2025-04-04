@@ -1,7 +1,9 @@
 qiskit>=1.4,<2.0
 qiskit-machine-learning>=0.8.2
-quantum_launcher
-torch>=2.5
 scikit-learn
 tqdm
 pandas
+torch>=2.5
+docplex<2.29
+cplex
+quantum_launcher
