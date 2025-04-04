@@ -24,7 +24,7 @@ class RotationalEncoder(EncodingBlock):
     def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
         # Don't create new parameter vectors. This would enable the user to encode the same vector in different parts of the circuit.
         if self._parameters is None:
-            self._parameters = self._create_parameter_vector(num_qubits).params
+            self._parameters = self._create_parameters(num_qubits)
 
         circuit = QuantumCircuit(num_qubits)
         match self.r_gate_type:
@@ -60,7 +60,7 @@ class RealAmplitudesBlock(EncodingBlock, EntanglingBlock):
         super().__init__("RealAmplitudesEncoder", block_type)
 
     def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
-        pv_name = self._create_parameter_vector(1).name
+        pv_name = self._create_parameters(1)[0].name
         amplitudes = RealAmplitudes(
             num_qubits,
             parameter_prefix=pv_name,

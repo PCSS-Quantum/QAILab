@@ -24,4 +24,5 @@ class AmplitudeEncoder(NonGateBlock, EncodingBlock):
 
     def _build_circuit(self, num_qubits: int) -> QuantumCircuit:
         circuit = TypedRawFeatureVector(2**num_qubits, self.block_type)
+        self._parameters = list(circuit.parameters)
         return circuit
