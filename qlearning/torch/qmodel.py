@@ -192,3 +192,11 @@ class QModel(BaseEstimator):
                 self.module = value
                 _update_optimizer()
         return self
+
+    def to_torch_module(self) -> nn.Module:
+        """Returns QModel's module with torch neural network.
+
+        Returns:
+            nn.Module: Torch neural network.
+        """
+        return self.module
