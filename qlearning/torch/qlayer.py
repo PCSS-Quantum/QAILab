@@ -1,11 +1,14 @@
 """ Module with QLayer """
 import math
-from torch import Tensor, nn
+
 import torch
+from torch import Tensor, nn
+
+from qiskit import QuantumCircuit, transpile
+from qiskit.circuit.library.generalized_gates.isometry import Isometry
+
 from quantum_launcher import QuantumLauncher
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
-from qiskit import QuantumCircuit
-from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
 from qlearning.circuit.utils import filter_params
 from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
@@ -38,15 +41,15 @@ class QLayer(nn.Module):
         )
         self.reset_parameters()
 
-        self.circuit = circuit
+        if backend is None or not isinstance(backend, QiskitBackend):
+            backend = QiskitBackend('local_simulator')
+
+        self.circuit = transpile(circuit, backend.sampler.backend) if hasattr(backend.sampler, 'backend') else circuit
         self.circuit_pr = CircuitProblem(self.circuit)
 
         # Helper variables for hybrid networks
         self.in_features = len(filter_params(circuit, 'input'))
         self.out_features = 2**self.circuit.num_clbits
-
-        if backend is None:
-            backend = QiskitBackend('local_simulator')
 
         self.launcher_forward = QuantumLauncher(
             self.circuit_pr,
