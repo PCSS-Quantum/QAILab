@@ -39,7 +39,7 @@ class ForwardPass(Algorithm):
             distribution = self._extract_results_v1(result)[0]
         else:
             raise ValueError(f'Result with type: {type(result)} is not supported')
-        return Result('', 0, '', 0, distribution, {}, self.shots, 0, 0, result)
+        return Result('', 0, '', 0, distribution, {}, self.shots, 0, 0, None)  # Results are not picklable
 
     def _extract_results_v2(self, result: PrimitiveResult) -> list[dict]:
         distributions = []
