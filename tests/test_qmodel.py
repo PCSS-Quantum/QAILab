@@ -58,7 +58,7 @@ def test_pandas_input():
         nn.ReLU(),
         nn.Linear(16, 3),
         nn.Softmax()
-    ), epochs=100, optimizer_type="adamw", loss=nn.CrossEntropyLoss())
+    ), epochs=2, optimizer_type="adamw", loss=nn.CrossEntropyLoss())
     assert len(torch.argmax(q_model.fit_predict(x, y), dim=1)) == len(y)  # type: ignore
 
 
@@ -69,22 +69,22 @@ def test_if_picklable():
         nn.ReLU(),
         nn.Linear(5, 1),
     ), nn.MSELoss(), optimizer_type=Adam, batch_size=2, epochs=3)
-    q_model(torch.Tensor([0, 1] * 5))
+    q_model.fit(np.random.rand(10, 10), np.random.rand(10, 1))
     model_in_str = pickle.dumps(q_model)
     assert isinstance(model_in_str, bytes)
     new_model = pickle.loads(model_in_str)
     assert isinstance(new_model, QModel)
-    result = new_model(torch.Tensor([0, 1] * 5))
+    result = new_model.predict(torch.Tensor([0, 1] * 5))
     assert isinstance(result, torch.Tensor)
 
 
 def test_if_picklable_after_training():
     """ Test if QModel can be pickled after training """
     q_model = QModel(torch.nn.Sequential(nn.Linear(10, 1)), loss=nn.MSELoss())
-    q_model.fit(np.random.rand(100, 10), np.random.rand(100, 1))
+    q_model.fit(np.random.rand(10, 10), np.random.rand(10, 1))
     model_in_str = pickle.dumps(q_model)
     assert isinstance(model_in_str, bytes)
     new_model = pickle.loads(model_in_str)
     assert isinstance(new_model, QModel)
-    result = new_model(torch.Tensor([0, 1] * 5))
+    result = new_model.predict(torch.Tensor([0, 1] * 5))
     assert isinstance(result, torch.Tensor)

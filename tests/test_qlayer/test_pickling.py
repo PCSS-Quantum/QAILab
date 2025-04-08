@@ -30,7 +30,6 @@ def test_pickling_load_and_save():
     assert isinstance(result, torch.Tensor)
 
 
-@pytest.mark.skip('Not working')
 def test_pickling_load_and_save_after_forward_pass():
     """ Test if QLayer can be pickled after forward pass """
     model = QLayer(build_circuit())
