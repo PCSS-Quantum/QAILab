@@ -14,7 +14,7 @@ AVAILABLE_OPTIMIZERS: dict[str, type[Optimizer]] = {opt.__name__.lower(): opt fo
     optim.Adam, optim.AdamW, optim.SGD, optim.Adadelta, optim.Adagrad, optim.Adamax, optim.RMSprop, optim.Rprop, optim.LBFGS]}
 
 
-class QModel(nn.Module, BaseEstimator):
+class QModel(BaseEstimator):
     """ Quantum model class """
     module: nn.Module
     loss: Callable
@@ -58,17 +58,13 @@ class QModel(nn.Module, BaseEstimator):
         self.validation_fraction = validation_fraction
         self.shuffle = shuffle
         self.device = device
-        self.to(device)
+        self.module.to(device)
 
     def reset_parameters(self) -> None:
         """ Resets parameters of QLayers """
         for layer in self.module.modules():
             if hasattr(layer, "reset_parameters"):
                 layer.reset_parameters()  # type: ignore
-
-    def forward(self, input_tensor: Tensor) -> Tensor:
-        """ Forward """
-        return self.module(input_tensor)
 
     def fit(self, x: Tensor | np.ndarray | pd.DataFrame, y: Tensor | np.ndarray | pd.DataFrame | pd.Series) -> "QModel":
         """ scikit-learn like fit method """
@@ -121,10 +117,10 @@ class QModel(nn.Module, BaseEstimator):
         pbar = tqdm(range(epochs), total=epochs, unit="epochs")
         for epoch in pbar:
 
-            self.train()
+            self.module.train()
             self._train_one_epoch(train_loader)
 
-            self.eval()
+            self.module.eval()
             with torch.inference_mode():
                 valid_loss = self._validate_one_epoch(validation_loader)
             pbar.set_postfix(loss=valid_loss, epoch=epoch + 1)
@@ -135,7 +131,7 @@ class QModel(nn.Module, BaseEstimator):
 
         for batch, (x, y) in enumerate(pbar):
             self.optimizer.zero_grad()
-            outputs = self(x)
+            outputs = self.module(x)
             loss = self.loss(outputs, y)
             loss.backward()
             self.optimizer.step()
@@ -149,7 +145,7 @@ class QModel(nn.Module, BaseEstimator):
         pbar = tqdm(validation_loader, unit="batches", leave=False)
 
         for batch, (x, y) in enumerate(pbar):
-            outputs = self(x)
+            outputs = self.module(x)
             loss = self.loss(outputs, y)
             losses.append(loss.item())
             pbar.set_postfix(loss=loss.item(), batch=batch + 1)
@@ -159,9 +155,9 @@ class QModel(nn.Module, BaseEstimator):
     def predict(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
         """ scikit-learn like predict method """
         x = self._x_to_tensor(x)
-        self.eval()
+        self.module.eval()
         with torch.inference_mode():
-            result = self(x).cpu()
+            result = self.module(x).cpu()
         return result
 
     def set_params(self, **params):
@@ -170,9 +166,9 @@ class QModel(nn.Module, BaseEstimator):
         def _update_optimizer():
 
             if self.learning_rate == "auto":
-                self.optimizer = self.optimizer_type(self.parameters())  # type: ignore
+                self.optimizer = self.optimizer_type(self.module.parameters())  # type: ignore
             else:
-                self.optimizer_type(self.parameters(), lr=self.learning_rate)  # type: ignore
+                self.optimizer_type(self.module.parameters(), lr=self.learning_rate)  # type: ignore
 
         if not params:
             return self
@@ -185,7 +181,7 @@ class QModel(nn.Module, BaseEstimator):
                 )
             if key == "device":
                 self.device = value
-                self.to(self.device)
+                self.module.to(self.device)
             elif key == "optimizer_type":
                 self.optimizer_type = value
                 _update_optimizer()
@@ -196,3 +192,11 @@ class QModel(nn.Module, BaseEstimator):
                 self.module = value
                 _update_optimizer()
         return self
+
+    def to_torch_module(self) -> nn.Module:
+        """Returns QModel's module with torch neural network.
+
+        Returns:
+            nn.Module: Torch neural network.
+        """
+        return self.module
