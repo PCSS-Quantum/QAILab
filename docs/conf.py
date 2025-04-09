@@ -51,6 +51,7 @@ release = version
 
 suppress_warnings = [
     'myst.header',  # ipynb linter
+    'myst.xref_missing',
     'docutils'  # rst linter
 ]
 
@@ -78,7 +79,7 @@ autodoc_typehints_description_target = "documented"
 
 napoleon_numpy_docstring = False
 
-jupyter_execute_notebooks = "off"
+nb_execution_mode = "off"
 
 templates_path = ['_templates']
 exclude_patterns = [
