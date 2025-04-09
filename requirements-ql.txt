@@ -1,2 +1,0 @@
-# QuantumLauncher
-git+https://gitlab.pcss.pl/quantum/psnc-sdk/launcher@QL-2.0[qiskit]
