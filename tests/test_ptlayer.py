@@ -54,7 +54,7 @@ def test_quantum_layers():
         nn.ReLU(),
         nn.Linear(16, 3),
         nn.Softmax()
-    ), nn.CrossEntropyLoss(), optimizer_type=HybridOptimizer, quantum_learning_rate=0.05, batch_size=10, epochs=50, metric="mse")
+    ), nn.CrossEntropyLoss(), optimizer_type=HybridOptimizer, quantum_learning_rate=0.05, batch_size=10, epochs=1, metric="accuracy")
     iris = datasets.load_iris()
     data, target = iris.data, iris.target
     result = torch.argmax(q_model.fit_predict(data, target), dim=1)
