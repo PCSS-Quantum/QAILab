@@ -93,3 +93,7 @@ class AerBackend(QiskitBackend):
             self.optimizer = COBYLA()
         else:
             raise ValueError(f"Unsupported mode for this backend:'{self.name}'")
+
+    def set_options(self, **fields):
+        """Set additional options for the instance AerSimulator"""
+        self.simulator.set_options(**fields)
