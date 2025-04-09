@@ -16,8 +16,35 @@ AVAILABLE_OPTIMIZERS: dict[str, type[Optimizer] | type[HybridOptimizer]] = {opt.
     optim.Adamax, optim.RMSprop, optim.Rprop, optim.LBFGS, HybridOptimizer]}
 
 
-class QModel(nn.Module, BaseEstimator):
-    """ Quantum model class """
+class QModel(BaseEstimator):
+    """ Quantum model class
+
+    Parameters
+    ----------
+    module: nn.Module
+        pytorch Module representing the quantum or classical neural network.
+    loss: Callable
+        pytorch loss function to be used during training.
+    optimizer_type: type[Optimizer] | str, default = "adamw"
+        pytorch Optimizer class to be used during training.
+    learning_rate: float | Literal['auto'], default = "auto"
+        learning rate used by the optimizer, "auto" sets it to optimizer's default one.
+    batch_size: int, default = 1
+        number of training examples in batch.
+    epochs: int, default = 1
+        number of epochs to train the model.
+    validation_fraction: float, default = 0.2
+       share of the training dataset to be used for validation.
+    shuffle: bool, default = True
+        whether to shuffle data every epoch.
+    device: {"cpu","cuda","mps"}, default="cpu"
+        the device neural network will be trained on.
+
+    Attributes
+    ----------
+    optimizer: Optimizer
+        pytorch optimizer object used during training
+    """
     module: nn.Module
     loss: Callable
     optimizer_type: type[Optimizer] | type[HybridOptimizer]
@@ -75,20 +102,30 @@ class QModel(nn.Module, BaseEstimator):
         self.shuffle = shuffle
         self.device = device
         self.metric = metric
-        self.to(device)
+        self.module.to(device)
 
     def reset_parameters(self) -> None:
-        """ Resets parameters of QLayers """
+        """ Resets parameters of layers """
         for layer in self.module.modules():
             if hasattr(layer, "reset_parameters"):
                 layer.reset_parameters()  # type: ignore
 
-    def forward(self, input_tensor: Tensor) -> Tensor:
-        """ Forward """
-        return self.module(input_tensor)
-
     def fit(self, x: Tensor | np.ndarray | pd.DataFrame, y: Tensor | np.ndarray | pd.DataFrame | pd.Series) -> "QModel":
-        """ scikit-learn like fit method """
+        """ scikit-learn like fit method
+        trains the neural network based on training set (x,y).
+
+        Parameters
+        ----------
+        x: Tensor | np.ndarray | pd.DataFrame
+            The training input samples of shape (n_samples, n_features).
+        y: Tensor | np.array | pd.DataFrame | pd.Series
+            The training target values of shape (n_samples,) or (n_samples, n_outputs)
+
+        Returns
+        -------
+        self: QModel
+            trained NN model
+        """
         x, y = self._x_y_to_tensor(x, y)
         tensor_dataset = TensorDataset(x, y)
         train_dataset, validation_dataset = random_split(tensor_dataset, [1 - self.validation_fraction, self.validation_fraction])
@@ -130,7 +167,22 @@ class QModel(nn.Module, BaseEstimator):
         return x, y
 
     def fit_predict(self, x: Tensor | np.ndarray | pd.DataFrame, y: Tensor | np.ndarray | pd.DataFrame | pd.Series) -> Tensor:
-        """ scikit-learn like fit_predict method """
+        """ scikit-learn like fit_predict method
+        trains the neural network based on training set (x,y) and predicts values for training examples x
+        combines fit and predict methods into one.
+
+        Parameters
+        ----------
+        x: Tensor | np.ndarray | pd.DataFrame
+            The training input samples of shape (n_samples, n_features).
+        y: Tensor | np.array | pd.DataFrame | pd.Series
+            The training target values of shape (n_samples,) or (n_samples, n_outputs).
+
+        Returns
+        -------
+        y_pred: Tensor
+            The predicted values for the training examples x.
+        """
         self.fit(x, y)
         return self.predict(x)
 
@@ -146,10 +198,10 @@ class QModel(nn.Module, BaseEstimator):
         pbar = tqdm(range(epochs), total=epochs, unit="epochs")
         for epoch in pbar:
 
-            self.train()
+            self.module.train()
             self._train_one_epoch(train_loader)
 
-            self.eval()
+            self.module.eval()
             with torch.inference_mode():
                 valid_loss, valid_metric = self._validate_one_epoch(validation_loader)
             if self.metric == "mse":
@@ -166,7 +218,7 @@ class QModel(nn.Module, BaseEstimator):
 
         for batch, (x, y) in enumerate(pbar):
             self.optimizer.zero_grad()
-            outputs = self(x)
+            outputs = self.module(x)
             loss = self.loss(outputs, y)
             if self.metric == "mse":
                 metrics.append(self._mse(outputs, y))
@@ -190,7 +242,7 @@ class QModel(nn.Module, BaseEstimator):
         pbar = tqdm(validation_loader, unit="batches", leave=False)
 
         for batch, (x, y) in enumerate(pbar):
-            outputs = self(x)
+            outputs = self.module(x)
             loss = self.loss(outputs, y)
             if self.metric == "mse":
                 metrics.append(self._mse(outputs, y))
@@ -207,15 +259,35 @@ class QModel(nn.Module, BaseEstimator):
         return np.mean(losses), np.mean(metrics)
 
     def predict(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
-        """ scikit-learn like predict method """
+        """ scikit-learn like predict method
+        predicts values for examples input examples x.
+
+        Parameters
+        ----------
+        x: Tensor | np.ndarray | pd.DataFrame
+           The input samples of shape (n_samples, n_features).
+
+        Returns
+        -------
+        y_pred: Tensor | np.ndarray | pd.DataFrame
+            The predicted values for examples x.
+
+        """
         x = self._x_to_tensor(x)
-        self.eval()
+        self.module.eval()
         with torch.inference_mode():
-            result = self(x).cpu()
+            result = self.module(x).cpu()
         return result
 
     def set_params(self, **params):
-        """ scikit-learn like param setting method"""
+        """ scikit-learn like param setting method
+        allows changing parameters of the model set in constructor.
+
+        Parameters
+        ----------
+        **params: dict
+            Keyword arguments representing the parameters to be set.
+        """
 
         def _update_optimizer():
 
@@ -245,7 +317,7 @@ class QModel(nn.Module, BaseEstimator):
                 )
             if key == "device":
                 self.device = value
-                self.to(self.device)
+                self.module.to(self.device)
             elif key == "optimizer_type":
                 self.optimizer_type = value
                 _update_optimizer()
@@ -259,3 +331,11 @@ class QModel(nn.Module, BaseEstimator):
                 self.module = value
                 _update_optimizer()
         return self
+
+    def to_torch_module(self) -> nn.Module:
+        """Returns QModel's module with torch neural network.
+
+        Returns:
+            nn.Module: Torch neural network.
+        """
+        return self.module

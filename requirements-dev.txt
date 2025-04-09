@@ -8,3 +8,11 @@ pytest_httpx
 
 # Linux dependencies
 docplex<2.29
+
+#Documentation build
+sphinx
+sphinx_copybutton
+better-apidoc
+sphinx-book-theme
+myst_nb
+pandoc

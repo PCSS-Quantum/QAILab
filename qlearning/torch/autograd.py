@@ -156,10 +156,20 @@ class ArgMax(Function):  # pylint: disable=abstract-method
     """
     @staticmethod
     def forward(fn_in):  # pylint: disable=arguments-differ
+        """
+        Forward run.
+
+        Args:
+            fn_in (torch.Tensor): Input tensor.
+
+        Returns:
+            torch.Tensor: First index(es) of maximum elements.
+        """
         return torch.tensor(torch.argmax(fn_in, dim=-1, keepdim=True), dtype=fn_in.dtype, requires_grad=True)
 
     @staticmethod
     def setup_context(ctx, inputs, output):
+        """Save tensors for backward pass"""
         ctx.save_for_backward(*inputs, output)
 
     @staticmethod
@@ -167,6 +177,16 @@ class ArgMax(Function):  # pylint: disable=abstract-method
         ctx,
         grad_output: torch.Tensor
     ) -> tuple[torch.Tensor]:
+        """
+        Calculation of backward pass.
+
+        Args:
+            ctx: Context object supplied by autograd.
+            grad_output (torch.Tensor): Grad from next layer.
+
+        Returns:
+            tuple[torch.Tensor]: Grad w.r.t. input.
+        """
         fn_in, idx = ctx.saved_tensors
         grad_input = torch.zeros(fn_in.shape, device=fn_in.device, dtype=fn_in.dtype)
         grad_input.scatter_(-1, torch.tensor(idx, dtype=torch.int64), grad_output.sum(-1, keepdim=True))

@@ -39,7 +39,7 @@ class ForwardPass(Algorithm):
             distribution = self._extract_results_v1(result)[0]
         else:
             raise ValueError(f'Result with type: {type(result)} is not supported')
-        return Result('', 0, '', 0, distribution, {}, self.shots, 0, 0, result)
+        return Result('', 0, '', 0, distribution, {}, self.shots, 0, 0, None)  # Results are not picklable
 
     def _extract_results_v2(self, result: PrimitiveResult) -> list[dict]:
         distributions = []
@@ -47,8 +47,13 @@ class ForwardPass(Algorithm):
             data = pub.data['c'].array
             num_qubits = pub.data['c'].num_bits
             distribution = defaultdict(float)
-            for i in data:
-                distribution[number_to_bit_tuple(i, num_qubits)] += 1 / self.shots
+            for datum_arr in data:
+                # Qiskit splits measurements into 8 bit chunks for some godforsaken reason.
+                tot_num = 0
+                for i, v in enumerate(datum_arr[::-1]):
+                    tot_num += int(v) * (2**(i * 8))
+
+                distribution[number_to_bit_tuple(tot_num, num_qubits)] += 1 / self.shots
             distributions.append(distribution)
         return distributions
 
