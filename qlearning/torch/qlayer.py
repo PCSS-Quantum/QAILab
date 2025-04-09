@@ -41,7 +41,7 @@ class QLayer(nn.Module):
         )
         self.reset_parameters()
 
-        if backend is None or not isinstance(backend, QiskitBackend):
+        if backend is None:
             backend = QiskitBackend('local_simulator')
 
         self.circuit = transpile(circuit, backend.sampler.backend) if hasattr(backend.sampler, 'backend') else circuit
