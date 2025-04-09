@@ -22,7 +22,7 @@ class QLayer(nn.Module):
 
     The bitstring order is [0, 1, 2, ..., 2^num_measured_qubits-1]
     """
-    weight: Tensor
+    theta_trainable: Tensor
 
     def __init__(
         self,
@@ -33,9 +33,10 @@ class QLayer(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.weight = nn.Parameter(
+        self.theta_trainable = nn.Parameter(
             torch.empty((len(filter_params(circuit, 'weight')), 1))
         )
+
         self.reset_parameters()
 
         self.circuit = circuit
@@ -61,7 +62,7 @@ class QLayer(nn.Module):
 
     def reset_parameters(self) -> None:
         """ Parameter reset """
-        nn.init.uniform_(self.weight, 0, 2 * math.pi)
+        nn.init.uniform_(self.theta_trainable, 0, 2 * math.pi)
 
     def extra_repr(self) -> str:
         return f"{self.circuit}"
@@ -70,7 +71,7 @@ class QLayer(nn.Module):
         """Forward run"""
         out = ExpVQCFunction.apply(
             input_tensor,
-            self.weight[:, 0],
+            self.theta_trainable[:, 0],
             self.launcher_forward,
             self.launcher_backward
         )
