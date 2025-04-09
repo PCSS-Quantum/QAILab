@@ -29,6 +29,8 @@ class QModel(BaseEstimator):
         pytorch Optimizer class to be used during training.
     learning_rate: float | Literal['auto'], default = "auto"
         learning rate used by the optimizer, "auto" sets it to optimizer's default one.
+    quantum_learning_rate: float | Literal['auto'], default = 'auto'
+        learning rate for quantum layers used by the HybridOptimizer, "auto" sets it to optimizer's default one.
     batch_size: int, default = 1
         number of training examples in batch.
     epochs: int, default = 1
