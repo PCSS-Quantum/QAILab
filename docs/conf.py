@@ -77,6 +77,8 @@ viewcode_line_numbers = True
 autodoc_typehints = "both"
 autodoc_typehints_description_target = "documented"
 
+autodoc_mock_imports = ['sklearn']
+
 napoleon_numpy_docstring = False
 
 nb_execution_mode = "off"
