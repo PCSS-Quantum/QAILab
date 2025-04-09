@@ -94,6 +94,12 @@ def test_expected_value_layer():
 
     loss.backward()  # Test if calling backward generates no errors
 
+    ql: ExpectedValueQLayer = quantum_model.net[1]
+    assert ql._max_expected_out_value == 2**ql.circuit.num_clbits - 1
+
+    ql._rescale_output_range = (-1, 1)
+    assert ql._rescale_out(torch.tensor([0])) == torch.tensor([-1])
+
 
 def test_argmax_layer():
     quantum_model = make_qmodel(ArgmaxQLayer, build_circuit_param_based_input())
