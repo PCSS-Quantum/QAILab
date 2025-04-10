@@ -40,7 +40,7 @@ class ExpectedValueQLayer(QLayer):
             return x
 
         out_min, out_max = self._rescale_output_range
-        x_zero_one = x / self._max_expected_out_value
+        x_zero_one = x / max(self._max_expected_out_value, 1)
         x_scale = x_zero_one * (out_max - out_min) + out_min
         return x_scale
 
