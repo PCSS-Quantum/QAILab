@@ -114,8 +114,14 @@ class OrcaTask:
     @property
     def status(self):
         """Task status"""
-        try_res = self._try_get_results()
+        response = requests.get(
+            self._full_url(f'tasks/{self.uid}/status'),
+            headers=self._get_headers(),
+            timeout=5
+        )
 
-        if (not len(self._results) > 0) and (not len(try_res) > 0):
-            return 'SUBMITTED'
-        return 'COMPLETED'
+        response.raise_for_status()
+
+        response_data = response.json()
+
+        return response_data.get('status', 'Unknown')
