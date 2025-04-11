@@ -33,6 +33,8 @@ pages:
   stage: deploy
   script:
     - cd docs
+    - mkdir -p tutorials
+    - cp ./../tutorials/*.ipynb ./tutorials
     - sphinx-build -b html . ../public
     - cd ..
   artifacts:
