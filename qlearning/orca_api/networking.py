@@ -1,13 +1,11 @@
-"""asdfasdfasdf"""
+"""Methods for communicating with psnc quantum api"""
 import time
 import requests
 
 
 class OrcaTask:
     """
-    Represents a single task for orca on pcss quantum api
-
-    __init__
+    Represents a single task for orca on psnc quantum api.
     """
 
     API_BASE_URL = 'https://api.quantum.psnc.pl/api/client'
@@ -33,7 +31,7 @@ class OrcaTask:
             'loop_lengths': loop_lengths,
             'postselection': postselection,
             'postselection_threshold': postselection_threshold,
-            'machine': None,
+            'machine': machine,
             'extra_options': kwargs
         }
 
@@ -75,32 +73,9 @@ class OrcaTask:
         self._created_time = response_data.get('created', None)
 
         if self.uid is None:
-            raise ValueError("API did not return task UID")
-
-    def submit(self):
-        """asdfasdfasdf"""
-
-        if self._submitted:
-            raise ValueError(f"Cannot submit the same task twice, {self.uid}")
-
-        response = requests.post(
-            self._full_url(f'tasks/{self.uid}/submit'),
-            headers=self._get_headers(),
-            timeout=5
-        )
-        response.raise_for_status()
-        response_data = response.json()
-
-        response_job_ids = response_data.get('job_ids', {'ids': []})['ids']
-        if len(response_job_ids) == 0:
-            raise RuntimeError("Failed to create job for task.")
-
-        self._submitted = True
-        self._job_ids += response_job_ids
+            raise ValueError('API did not return task UID')
 
     def _try_get_results(self):
-        if not self._submitted:
-            raise ValueError(f"Submit a task first to get results. {self.uid}")
 
         response = requests.get(
             self._full_url(f'tasks/{self.uid}/results'),
@@ -108,31 +83,37 @@ class OrcaTask:
             timeout=5
         )
 
-        response.raise_for_status()
+        if not response.ok:
+            return {}
+
         response_data = response.json()
 
         return response_data
 
-    def results(self):
-        """asdfasdfasdf"""
+    def results(self) -> list[str]:
+        """
+        Get task results. Blocks the thread until results are available.
 
+        Returns:
+            list[str]: List of bitstrings obtained from runs.
+        """
         if self._results != []:
-            return self.results
+            return self._results
 
         res = self._try_get_results()
         while res == {}:
             time.sleep(0.05)
             res = self._try_get_results()
 
+        if not isinstance(res, list):
+            raise ValueError(f'invalid result type: {type(res)}, {res}')
+
         self._results = res
         return res
 
     @property
     def status(self):
-        """asdfasdfasdf"""
-
-        if not self._submitted:
-            return 'NEW'
-        if self._submitted and not len(self._results) > 0:
-            return 'RUNNING'
+        """Task status"""
+        if not len(self._results) > 0:
+            return 'SUBMITTED'
         return 'COMPLETED'
