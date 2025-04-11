@@ -2,3 +2,8 @@
 
 # mlflow_example
 mlflow
+
+#tutorial notebooks
+pylatexenc
+torchvision
+seaborn
