@@ -1,1 +1,1 @@
-""" QLearning description. """
+""" A high level library for integrating QNNs with PyTorch """

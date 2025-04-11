@@ -15,10 +15,6 @@ button.sidebar-toggle {
     max-width: 100% !important;
 }
 
-.bd-sidebar-primary {
-    overflow-y: hidden !important;
-}
-
 .navbar-brand img {
     max-height: 300px !important;
     max-width: 300px !important;
