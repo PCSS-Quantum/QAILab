@@ -10,8 +10,30 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
-AVAILABLE_OPTIMIZERS: dict[str, type[Optimizer]] = {opt.__name__.lower(): opt for opt in [
-    optim.Adam, optim.AdamW, optim.SGD, optim.Adadelta, optim.Adagrad, optim.Adamax, optim.RMSprop, optim.Rprop, optim.LBFGS]}
+try:
+    from ptseries.optimizers import HybridOptimizer
+except ImportError:
+    class HybridOptimizer():
+        """Dummy HO"""
+        # pylint: disable=too-few-public-methods
+
+        def __init__(
+            self,
+            model,
+            lr_classical=0.01,
+            lr_quantum=0.01,
+            optimizer_quantum='SGD',
+            optimizer_classical='Adam',
+            betas=(0.9, 0.999),
+            spsa_resamplings=1,
+            spsa_gamma_decay=0.101,
+            spsa_alpha_decay=0.602
+        ):
+            pass
+
+AVAILABLE_OPTIMIZERS: dict[str, type[Optimizer] | type[HybridOptimizer]] = {opt.__name__.lower(): opt for opt in [
+    optim.Adam, optim.AdamW, optim.SGD, optim.Adadelta, optim.Adagrad,
+    optim.Adamax, optim.RMSprop, optim.Rprop, optim.LBFGS, HybridOptimizer]}
 
 
 class QModel(BaseEstimator):
@@ -27,6 +49,8 @@ class QModel(BaseEstimator):
         pytorch Optimizer class to be used during training.
     learning_rate: float | Literal['auto'], default = "auto"
         learning rate used by the optimizer, "auto" sets it to optimizer's default one.
+    quantum_learning_rate: float | Literal['auto'], default = 'auto'
+        learning rate for quantum layers used by the HybridOptimizer, "auto" sets it to optimizer's default one.
     batch_size: int, default = 1
         number of training examples in batch.
     epochs: int, default = 1
@@ -51,9 +75,10 @@ class QModel(BaseEstimator):
 
     module: nn.Module
     loss: Callable
-    optimizer_type: type[Optimizer]
+    optimizer_type: type[Optimizer] | type[HybridOptimizer]
     optimizer: Optimizer
     learning_rate: float | Literal['auto']
+    quantum_learning_rate: float | Literal['auto']
     batch_size: int
     epochs: int
     validation_fraction: float
@@ -64,13 +89,15 @@ class QModel(BaseEstimator):
         self,
         module: nn.Module,
         loss: Callable,
-        optimizer_type: type[Optimizer] | str = 'adamw',
+        optimizer_type: type[Optimizer] | type[HybridOptimizer] | str = 'adamw',
         learning_rate: float | Literal['auto'] = 'auto',
+        quantum_learning_rate: float | Literal['auto'] = 'auto',
         batch_size: int = 1,
         epochs: int = 1,
         validation_fraction: float = 0.2,
         shuffle: bool = True,
-        device: Literal["cpu", "cuda", "mps"] = "cpu"
+        device: Literal["cpu", "cuda", "mps"] = "cpu",
+        metric: Literal["accuracy", "mse"] = "accuracy"
     ):
         super().__init__()
         self.module = module
@@ -82,7 +109,18 @@ class QModel(BaseEstimator):
             optimizer_type = AVAILABLE_OPTIMIZERS[optimizer_type]
         self.optimizer_type = optimizer_type
         self.learning_rate = learning_rate
-        if self.learning_rate == 'auto':
+        self.quantum_learning_rate = quantum_learning_rate
+        if self.optimizer_type == HybridOptimizer:
+            if self.quantum_learning_rate != 'auto' and self.learning_rate != "auto":
+                self.optimizer = self.optimizer_type(self.module, lr_classical=self.learning_rate,
+                                                     lr_quantum=self.quantum_learning_rate)  # type: ignore
+            elif self.quantum_learning_rate != 'auto' and self.learning_rate == "auto":
+                self.optimizer = self.optimizer_type(self.module, lr_quantum=self.quantum_learning_rate)  # type: ignore
+            elif self.quantum_learning_rate == 'auto' and self.learning_rate != "auto":
+                self.optimizer = self.optimizer_type(self.module, lr_classical=self.learning_rate)  # type: ignore
+            else:
+                self.optimizer = self.optimizer_type(self.module)  # type: ignore
+        elif self.learning_rate == 'auto':
             self.optimizer = self.optimizer_type(self.module.parameters())  # type: ignore
         else:
             self.optimizer = self.optimizer_type(self.module.parameters(), lr=self.learning_rate)  # type: ignore
@@ -91,6 +129,7 @@ class QModel(BaseEstimator):
         self.validation_fraction = validation_fraction
         self.shuffle = shuffle
         self.device = device
+        self.metric = metric
         self.module.to(device)
 
         self.loss_history = {
@@ -180,6 +219,14 @@ class QModel(BaseEstimator):
         self.fit(x, y)
         return self.predict(x)
 
+    @staticmethod
+    def _accuracy(y_pred, y_gt):
+        return (torch.argmax(y_pred, dim=1).eq(y_gt)).sum().item() / len(y_gt)
+
+    @staticmethod
+    def _mse(y_pred, y_gt):
+        return ((y_pred - y_gt)**2).sum().item() / len(y_gt)
+
     def _train_loop(self, train_loader: DataLoader, validation_loader: DataLoader, epochs: int):
         self.loss_history = {
             'training': [],
@@ -193,37 +240,62 @@ class QModel(BaseEstimator):
 
             self.module.eval()
             with torch.inference_mode():
-                valid_loss = self._validate_one_epoch(validation_loader)
-            pbar.set_postfix(loss=valid_loss, epoch=epoch + 1)
+                valid_loss, valid_metric = self._validate_one_epoch(validation_loader)
+            if self.metric == "mse":
+                pbar.set_postfix(loss=valid_loss, mse=valid_metric, epoch=epoch + 1)
+            elif self.metric == "accuracy":
+                pbar.set_postfix(loss=valid_loss, acc=valid_metric, epoch=epoch + 1)
+            else:
+                pbar.set_postfix(loss=valid_loss, epoch=epoch + 1)
 
-    def _train_one_epoch(self, train_loader: DataLoader) -> np.floating:
+    def _train_one_epoch(self, train_loader: DataLoader) -> tuple[np.floating, np.floating]:
         losses = []
+        metrics = []
         pbar = tqdm(train_loader, unit="batches", leave=False)
 
         for batch, (x, y) in enumerate(pbar):
             self.optimizer.zero_grad()
             outputs = self.module(x)
             loss = self.loss(outputs, y)
+            if self.metric == "mse":
+                metrics.append(self._mse(outputs, y))
+            elif self.metric == "accuracy":
+                metrics.append(self._accuracy(outputs, y))
             loss.backward()
             self.optimizer.step()
             losses.append(loss.item())
-            pbar.set_postfix(loss=loss.item(), batch=batch + 1)
+            if self.metric == "mse":
+                pbar.set_postfix(loss=loss.item(), mse=metrics[-1], batch=batch + 1)
+            elif self.metric == "accuracy":
+                pbar.set_postfix(loss=loss.item(), acc=metrics[-1], batch=batch + 1)
+            else:
+                pbar.set_postfix(loss=loss.item(), batch=batch + 1)
 
         self.loss_history['training'].append(np.mean(losses))
-        return np.mean(losses)
+        return np.mean(losses), np.mean(metrics)
 
-    def _validate_one_epoch(self, validation_loader: DataLoader) -> np.floating:
+    def _validate_one_epoch(self, validation_loader: DataLoader) -> tuple[np.floating, np.floating]:
         losses = []
+        metrics = []
         pbar = tqdm(validation_loader, unit="batches", leave=False)
 
         for batch, (x, y) in enumerate(pbar):
             outputs = self.module(x)
             loss = self.loss(outputs, y)
+            if self.metric == "mse":
+                metrics.append(self._mse(outputs, y))
+            elif self.metric == "accuracy":
+                metrics.append(self._accuracy(outputs, y))
             losses.append(loss.item())
-            pbar.set_postfix(loss=loss.item(), batch=batch + 1)
+            if self.metric == "mse":
+                pbar.set_postfix(loss=loss.item(), mse=metrics[-1], batch=batch + 1)
+            elif self.metric == "accuracy":
+                pbar.set_postfix(loss=loss.item(), acc=metrics[-1], batch=batch + 1)
+            else:
+                pbar.set_postfix(loss=loss.item(), batch=batch + 1)
 
         self.loss_history['validation'].append(np.mean(losses))
-        return np.mean(losses)
+        return np.mean(losses), np.mean(metrics)
 
     def predict(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
         """ scikit-learn like predict method
@@ -258,10 +330,20 @@ class QModel(BaseEstimator):
 
         def _update_optimizer():
 
-            if self.learning_rate == "auto":
+            if self.optimizer_type == HybridOptimizer:
+                if self.quantum_learning_rate != 'auto' and self.learning_rate != "auto":
+                    self.optimizer = self.optimizer_type(self.module, lr_classical=self.learning_rate,
+                                                         lr_quantum=self.quantum_learning_rate)  # type: ignore
+                elif self.quantum_learning_rate != 'auto' and self.learning_rate == "auto":
+                    self.optimizer = self.optimizer_type(self.module, lr_quantum=self.quantum_learning_rate)  # type: ignore
+                elif self.quantum_learning_rate == 'auto' and self.learning_rate != "auto":
+                    self.optimizer = self.optimizer_type(self.module, lr_classical=self.learning_rate)  # type: ignore
+                else:
+                    self.optimizer = self.optimizer_type(self.module)  # type: ignore
+            elif self.learning_rate == 'auto':
                 self.optimizer = self.optimizer_type(self.module.parameters())  # type: ignore
             else:
-                self.optimizer_type(self.module.parameters(), lr=self.learning_rate)  # type: ignore
+                self.optimizer = self.optimizer_type(self.module.parameters(), lr=self.learning_rate)  # type: ignore
 
         if not params:
             return self
@@ -280,6 +362,9 @@ class QModel(BaseEstimator):
                 _update_optimizer()
             elif key == "learning_rate":
                 self.learning_rate = value
+                _update_optimizer()
+            elif key == "quantum_learning_rate":
+                self.quantum_learning_rate = value
                 _update_optimizer()
             elif key == "module":
                 self.module = value

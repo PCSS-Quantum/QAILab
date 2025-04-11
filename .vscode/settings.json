@@ -5,6 +5,8 @@
         "httpx",
         "kaiming",
         "networkx",
+        "postselected",
+        "postselection",
         "pylint",
         "qiskit",
         "qlauncher",
