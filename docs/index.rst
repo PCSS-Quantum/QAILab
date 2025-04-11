@@ -9,11 +9,11 @@ QLearning is a high level library which enables the user to integrate quantum ne
 ----------------
 Getting started
 ----------------
-To install the quantum launcher use the following script:
 
+You can install QLearning via pip:
 ::
 
-   pip install git+https://WIP.com/WIP/WIP.git
+   pip install qlearning
 
 
 Then you can get to know the library by checking out the following sections:
