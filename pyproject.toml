@@ -1,9 +1,9 @@
 [project]
 name = "qlearning"
 version = "0.1.0"
-description = "Add your description here"
+description = "Library providing easy to use PyTorch compatible Quantum Neural Network Layers for both universal and photonic quantum computers."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "qiskit>=1.4.0",
     "qiskit-machine-learning>=0.8.2",
