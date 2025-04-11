@@ -16,7 +16,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["qlearning"]
+include = ["qlearning*"]
 
 [project.optional-dependencies]
 test = ["pytest", "pylint", "pre-commit"]
