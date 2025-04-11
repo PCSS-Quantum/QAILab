@@ -1,3 +1,2 @@
-*
-!*.ipynb
-!.gitignore
+# dataset downloaded while running classifier.ipynb
+fmnist/

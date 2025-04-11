@@ -46,7 +46,13 @@ class QModel(BaseEstimator):
     ----------
     optimizer: Optimizer
         pytorch optimizer object used during training
+    loss_history: dict[str,list]
+        history of loss values from the last fit call. dict contains keys 'training' and 'validation'
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # Reasonable amount for model training
+
     module: nn.Module
     loss: Callable
     optimizer_type: type[Optimizer] | type[HybridOptimizer]
@@ -105,6 +111,11 @@ class QModel(BaseEstimator):
         self.device = device
         self.metric = metric
         self.module.to(device)
+
+        self.loss_history = {
+            'training': [],
+            'validation': []
+        }
 
     def reset_parameters(self) -> None:
         """ Resets parameters of layers """
@@ -197,6 +208,10 @@ class QModel(BaseEstimator):
         return ((y_pred - y_gt)**2).sum().item() / len(y_gt)
 
     def _train_loop(self, train_loader: DataLoader, validation_loader: DataLoader, epochs: int):
+        self.loss_history = {
+            'training': [],
+            'validation': []
+        }
         pbar = tqdm(range(epochs), total=epochs, unit="epochs")
         for epoch in pbar:
 
@@ -236,6 +251,7 @@ class QModel(BaseEstimator):
             else:
                 pbar.set_postfix(loss=loss.item(), batch=batch + 1)
 
+        self.loss_history['training'].append(np.mean(losses))
         return np.mean(losses), np.mean(metrics)
 
     def _validate_one_epoch(self, validation_loader: DataLoader) -> tuple[np.floating, np.floating]:
@@ -258,6 +274,7 @@ class QModel(BaseEstimator):
             else:
                 pbar.set_postfix(loss=loss.item(), batch=batch + 1)
 
+        self.loss_history['validation'].append(np.mean(losses))
         return np.mean(losses), np.mean(metrics)
 
     def predict(self, x: Tensor | np.ndarray | pd.DataFrame) -> Tensor:
