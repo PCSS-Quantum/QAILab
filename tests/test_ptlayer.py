@@ -1,12 +1,18 @@
-from qlearning.torch.qmodel import QModel
-from qlearning.torch.qlayer import QLayer
-from qlearning.torch.orca_layer import ORCALayer
-from ptseries.optimizers import HybridOptimizer
+import pytest
+
 import qiskit.circuit
 import torch.nn as nn
 import torch
 from torch.optim.adam import Adam
 from sklearn import datasets
+
+
+from qlearning.torch.qmodel import QModel
+from qlearning.torch.qlayer import QLayer
+
+
+ORCALayer = pytest.importorskip('qlearning.torch.orca_layer.ORCALayer')
+HybridOptimizer = pytest.importorskip('ptseries.optimizers.HybridOptimizer')
 
 
 def build_circuit() -> qiskit.QuantumCircuit:

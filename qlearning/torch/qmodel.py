@@ -9,7 +9,27 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-from ptseries.optimizers import HybridOptimizer
+
+try:
+    from ptseries.optimizers import HybridOptimizer
+except ImportError:
+    class HybridOptimizer():
+        """Dummy HO"""
+        # pylint: disable=too-few-public-methods
+
+        def __init__(
+            self,
+            model,
+            lr_classical=0.01,
+            lr_quantum=0.01,
+            optimizer_quantum='SGD',
+            optimizer_classical='Adam',
+            betas=(0.9, 0.999),
+            spsa_resamplings=1,
+            spsa_gamma_decay=0.101,
+            spsa_alpha_decay=0.602
+        ):
+            pass
 
 AVAILABLE_OPTIMIZERS: dict[str, type[Optimizer] | type[HybridOptimizer]] = {opt.__name__.lower(): opt for opt in [
     optim.Adam, optim.AdamW, optim.SGD, optim.Adadelta, optim.Adagrad,
