@@ -8,7 +8,7 @@ import numpy as np
 
 
 class ORCALayer(nn.Module):
-    """_summary_
+    """Neural Network layer using ORCA quantum computers, a PTLayer wrapper
 
     Parameters
     ----------
