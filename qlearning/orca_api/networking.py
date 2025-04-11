@@ -35,7 +35,7 @@ class OrcaTask:
             'extra_options': kwargs
         }
 
-        self.uid = None
+        self.uid: str
         self._job_ids = []
         self._results = []
 
