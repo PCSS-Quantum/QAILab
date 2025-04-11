@@ -15,8 +15,6 @@ from qlearning.orca_api.networking import OrcaTask
 if TYPE_CHECKING:
     FILE_LIKE: TypeAlias = str | os.PathLike
 
-CONNECTION_UNSUCCESSFUL_MSG = "Connection unsuccessful"
-
 
 class PTAdapter(PT):
     """ Adapter for PT tbi """

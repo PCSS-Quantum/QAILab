@@ -6,4 +6,5 @@ pandas
 torch>=2.5
 docplex<2.29
 cplex
+requests
 quantum_launcher
