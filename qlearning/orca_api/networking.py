@@ -114,6 +114,7 @@ class OrcaTask:
     @property
     def status(self):
         """Task status"""
+        self._results = self._try_get_results()
         if not len(self._results) > 0:
             return 'SUBMITTED'
         return 'COMPLETED'
