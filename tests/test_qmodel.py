@@ -8,7 +8,7 @@ from torch.optim import Adam
 import numpy as np
 from sklearn.datasets import load_iris
 
-from qlearning.torch.qmodel import QModel
+from qailab.torch.qmodel import QModel
 
 
 def test_runtime():

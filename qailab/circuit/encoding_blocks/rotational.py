@@ -5,7 +5,7 @@ from collections.abc import Callable
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 
-from qlearning.circuit.base import EncodingBlock, EntanglingBlock
+from qailab.circuit.base import EncodingBlock, EntanglingBlock
 
 
 class RotationalEncoder(EncodingBlock):

@@ -3,7 +3,7 @@ import pickle
 import pytest
 import torch
 import qiskit.circuit
-from qlearning.torch import QLayer
+from qailab.torch import QLayer
 
 
 def build_circuit() -> qiskit.QuantumCircuit:

@@ -3,8 +3,8 @@ from qiskit import QuantumCircuit
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 import torch
 
-from qlearning.torch.qlayer import QLayer
-from qlearning.torch.autograd import ArgMax
+from qailab.torch.qlayer import QLayer
+from qailab.torch.autograd import ArgMax
 
 
 class ExpectedValueQLayer(QLayer):

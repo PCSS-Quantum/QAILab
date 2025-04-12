@@ -10,9 +10,9 @@ from qiskit.circuit.library.generalized_gates.isometry import Isometry
 from quantum_launcher import QuantumLauncher
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
-from qlearning.circuit.utils import filter_params
-from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
-from qlearning.torch.autograd import ExpVQCFunction
+from qailab.circuit.utils import filter_params
+from qailab.qlauncher import CircuitProblem, ForwardPass, BackwardPass
+from qailab.torch.autograd import ExpVQCFunction
 Isometry.__init__.__defaults__ = (1e-6,)  # FIXME: If anyone has any idea, feel free
 
 

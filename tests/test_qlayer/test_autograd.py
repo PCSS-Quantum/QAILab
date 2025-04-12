@@ -6,11 +6,11 @@ import numpy as np
 from quantum_launcher import QuantumLauncher
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
-from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
+from qailab.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 
-from qlearning.torch.autograd import ExpVQCFunction, ArgMax
-from qlearning.circuit import RotationalEncoder, build_circuit
-from qlearning.circuit.utils import filter_params
+from qailab.torch.autograd import ExpVQCFunction, ArgMax
+from qailab.circuit import RotationalEncoder, build_circuit
+from qailab.circuit.utils import filter_params
 
 
 def _prep_circuit():

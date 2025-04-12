@@ -7,7 +7,7 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 import pytest
 
-from qlearning.qlauncher import CircuitProblem, ForwardPass, BackwardPass
+from qailab.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 
 
 def _trainable_circuit() -> tuple[CircuitProblem, list[Parameter]]:
