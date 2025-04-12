@@ -8,7 +8,7 @@ from quantum_launcher.routines.qiskit_routines import QiskitBackend
 from qiskit.primitives.containers.primitive_result import PrimitiveResult
 from qiskit.primitives.base.sampler_result import SamplerResult
 
-from qlearning.utils import number_to_bit_tuple
+from qailab.utils import number_to_bit_tuple
 
 
 class ForwardPass(Algorithm):

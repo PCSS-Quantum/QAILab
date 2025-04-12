@@ -10,7 +10,7 @@
         "pylint",
         "qiskit",
         "qlauncher",
-        "qlearning",
+        "qailab",
         "scikit",
         "sdist",
         "setuptools",

@@ -1,8 +1,8 @@
 """ File for testing utility functions """
 from qiskit.circuit import QuantumCircuit, Parameter
 
-from qlearning.utils import number_to_bit_tuple
-from qlearning.circuit.utils import param_map, filter_params, assign_input_weight
+from qailab.utils import number_to_bit_tuple
+from qailab.circuit.utils import param_map, filter_params, assign_input_weight
 
 
 def test_number_to_bit_tuple():

@@ -8,7 +8,7 @@ Creating a QNN circuit
 
 .. code-block:: python
 
-    from qlearning.circuit import build_circuit, RotationalEncoder, CXEntangler, RealAmplitudesBlock
+    from qailab.circuit import build_circuit, RotationalEncoder, CXEntangler, RealAmplitudesBlock
 
     input_encoder = RotationalEncoder('x','input')
     quantum_circuit = build_circuit(
@@ -33,7 +33,7 @@ Making a hybrid neural network
 .. code-block:: python
 
     import torch.nn as nn
-    from qlearning.torch import QLayer
+    from qailab.torch import QLayer
 
     qlayer = QLayer(
         quantum_circuit,

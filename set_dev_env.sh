@@ -22,7 +22,7 @@ uv pip install -r requirements-ql.txt
     pytest tests &&
 
     echo "\n\033[1m===================Running Linter===================\033[0m\n" &&
-    pylint qlearning
+    pylint qailab
 } || {
     echo "\033[1m\n==============\033[0;31m!!Something went wrong!!\033[0m\033[1m==============\033[0m\n"
 }

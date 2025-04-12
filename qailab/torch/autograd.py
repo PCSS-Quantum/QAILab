@@ -7,8 +7,8 @@ from torch.autograd.function import once_differentiable
 
 from quantum_launcher import QuantumLauncher
 
-from qlearning.utils import distribution_to_array
-from qlearning.circuit.utils import filter_params, assign_input_weight
+from qailab.utils import distribution_to_array
+from qailab.circuit.utils import filter_params, assign_input_weight
 
 # * Using template code from torch generates weird linter errors,
 # * might have to investigate later, ignoring for now as everything seems to work correctly.

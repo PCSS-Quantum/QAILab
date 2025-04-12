@@ -1,6 +1,6 @@
 """Different implementations of qubit entangling sections for variational circuits."""
 from qiskit import QuantumCircuit
-from qlearning.circuit.base import EntanglingBlock
+from qailab.circuit.base import EntanglingBlock
 
 
 class CXEntangler(EntanglingBlock):

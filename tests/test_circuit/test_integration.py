@@ -2,9 +2,9 @@
 from quantum_launcher import QuantumLauncher, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
-from qlearning.circuit import RotationalEncoder, build_circuit
-from qlearning.circuit.utils import assign_input_weight
-from qlearning.qlauncher import CircuitProblem, ForwardPass
+from qailab.circuit import RotationalEncoder, build_circuit
+from qailab.circuit.utils import assign_input_weight
+from qailab.qlauncher import CircuitProblem, ForwardPass
 
 
 def _prepare_circ():

@@ -21,7 +21,7 @@ default:
 pylint_and_pytest:
   stage: testing and code analysis
   script:
-    - pylint qlearning
+    - pylint qailab
     - pylint examples
     - pytest -v tests
   rules:

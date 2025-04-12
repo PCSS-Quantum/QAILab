@@ -1,5 +1,5 @@
 [project]
-name = "qlearning"
+name = "qailab"
 version = "0.1.0"
 description = "Library providing easy to use PyTorch compatible Quantum Neural Network Layers for both universal and photonic quantum computers."
 readme = "README.md"
@@ -16,7 +16,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["qlearning"]
+include = ["qailab*"]
 
 [project.optional-dependencies]
 test = ["pytest", "pylint", "pre-commit"]

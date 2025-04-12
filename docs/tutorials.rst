@@ -1,7 +1,7 @@
 Tutorials
 ============
 
-This section contains several tutorials, that will help you to get started with QLearning.
+This section contains several tutorials, that will help you to get started with QAILab.
 
 ------
 Usage
@@ -14,7 +14,7 @@ Usage
    tutorials/regressor
 
 --------------------
-Extending QLearning
+Extending QAILab
 --------------------
 
 .. toctree::

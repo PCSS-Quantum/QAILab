@@ -5,7 +5,7 @@ from torch import nn
 import torch
 import numpy as np
 
-from qlearning.orca_api.pt_adapter import PTAdapter
+from qailab.orca_api.pt_adapter import PTAdapter
 
 
 class ORCALayer(nn.Module):
