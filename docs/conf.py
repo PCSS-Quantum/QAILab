@@ -77,7 +77,7 @@ viewcode_line_numbers = True
 autodoc_typehints = "both"
 autodoc_typehints_description_target = "documented"
 
-autodoc_mock_imports = ['sklearn']
+autodoc_mock_imports = ['sklearn', 'ptseries']
 
 napoleon_numpy_docstring = False
 
