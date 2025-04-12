@@ -22,7 +22,7 @@ stages:
 pylint:
   stage: code analysis and testing
   script:
-    - pylint qlearning
+    - pylint qailab
     - pylint examples
 
 pytest:

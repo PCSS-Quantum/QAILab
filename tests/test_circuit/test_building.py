@@ -4,11 +4,11 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.primitives import Sampler
 
-from qlearning.circuit.base import CircuitBlock
-from qlearning.circuit.layer_blocks import CXEntangler
-from qlearning.circuit.encoding_blocks import RotationalEncoder, RealAmplitudesBlock
-from qlearning.circuit.circuit_builder import build_circuit
-from qlearning.circuit.utils import filter_params, assign_input_weight
+from qailab.circuit.base import CircuitBlock
+from qailab.circuit.layer_blocks import CXEntangler
+from qailab.circuit.encoding_blocks import RotationalEncoder, RealAmplitudesBlock
+from qailab.circuit.circuit_builder import build_circuit
+from qailab.circuit.utils import filter_params, assign_input_weight
 
 
 def test_builder():

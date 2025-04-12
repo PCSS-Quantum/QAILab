@@ -3,7 +3,7 @@ from typing import Literal
 from qiskit.circuit import QuantumCircuit, ParameterVector
 from qiskit_machine_learning.circuit.library import RawFeatureVector
 
-from qlearning.circuit.base import EncodingBlock, NonGateBlock
+from qailab.circuit.base import EncodingBlock, NonGateBlock
 
 
 class TypedRawFeatureVector(RawFeatureVector):

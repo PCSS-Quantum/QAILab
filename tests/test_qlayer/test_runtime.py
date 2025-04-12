@@ -4,7 +4,7 @@ from torch import nn
 import qiskit
 import qiskit.circuit
 
-from qlearning.torch import QLayer, ExpectedValueQLayer, ArgmaxQLayer
+from qailab.torch import QLayer, ExpectedValueQLayer, ArgmaxQLayer
 
 
 def build_circuit() -> qiskit.QuantumCircuit:

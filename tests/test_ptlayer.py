@@ -1,14 +1,15 @@
+"""OrcaLayer tests"""
 import pytest
 
 import qiskit.circuit
-import torch.nn as nn
+from torch import nn
 import torch
 from torch.optim.adam import Adam
 from sklearn import datasets
 
 
-from qlearning.torch.qmodel import QModel
-from qlearning.torch.qlayer import QLayer
+from qailab.torch.qmodel import QModel
+from qailab.torch.qlayer import QLayer
 
 
 ORCALayer = pytest.importorskip('qlearning.torch.orca_layer.ORCALayer')
@@ -38,7 +39,7 @@ def test_orca_layer():
         nn.Linear(4, 6),
         nn.ReLU(),
         ORCALayer(6, n_loops=2),
-        nn.Linear(6, 3),
+        nn.Linear(7, 3),
         nn.Softmax()
 
     ), nn.CrossEntropyLoss(), optimizer_type=Adam, epochs=1)
@@ -54,7 +55,7 @@ def test_quantum_layers():
         nn.Linear(4, 4),
         nn.ReLU(),
         ORCALayer(4, n_loops=2),
-        nn.Linear(4, 4),
+        nn.Linear(5, 4),
         nn.ReLU(),
         QLayer(build_circuit()),
         nn.ReLU(),

@@ -10,7 +10,7 @@ from typing_extensions import TypeAlias
 
 from ptseries.tbi.pt import PT
 from ptseries.tbi.tbi_abstract import TBIDevice
-from qlearning.orca_api.networking import OrcaTask
+from qailab.orca_api.networking import OrcaTask
 
 if TYPE_CHECKING:
     FILE_LIKE: TypeAlias = str | os.PathLike

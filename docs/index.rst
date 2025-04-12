@@ -1,19 +1,19 @@
-QLearning Docs
+QAILab Docs
 =====================
 
 ----------------
 About project
 ----------------
-QLearning is a high level library which enables the user to integrate quantum neural networks of different configurations into their existing PyTorch neural networks.
+QAILab is a high level library which enables the user to integrate quantum neural networks of different configurations into their existing PyTorch neural networks.
 
 ----------------
 Getting started
 ----------------
 
-You can install QLearning via pip:
+You can install QAILab via pip:
 ::
 
-   pip install qlearning
+   pip install qailab
 
 
 Then you can get to know the library by checking out the following sections:

@@ -2,7 +2,7 @@
 
 from qiskit import QuantumCircuit
 
-from qlearning.circuit.base import NonGateBlock
+from qailab.circuit.base import NonGateBlock
 
 
 class MeasurementBlock(NonGateBlock):

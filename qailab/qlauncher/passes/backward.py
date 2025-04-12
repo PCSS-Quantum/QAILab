@@ -3,8 +3,8 @@ from collections.abc import Callable
 from typing import Any, Literal
 from quantum_launcher.base.base import Backend, Problem, Result
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
-from qlearning.qlauncher.passes.forward import ForwardPass
-from qlearning.gradient.gradient_calculation import calculate_jacobian
+from qailab.qlauncher.passes.forward import ForwardPass
+from qailab.gradient.gradient_calculation import calculate_jacobian
 
 
 class BackwardPass(ForwardPass):

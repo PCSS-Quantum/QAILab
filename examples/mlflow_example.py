@@ -1,4 +1,4 @@
-""" Example of integration QLearning with MLFlow """
+""" Example of integration QAILab with MLFlow """
 # Requires installation of MLFlow
 import numpy as np
 from tqdm import tqdm
@@ -9,7 +9,7 @@ import qiskit
 import qiskit.circuit
 import mlflow
 import mlflow.pytorch
-from qlearning.torch.qlayer import QLayer
+from qailab.torch.qlayer import QLayer
 
 
 def create_dataset() -> tuple[Tensor, Tensor, Tensor, Tensor]:

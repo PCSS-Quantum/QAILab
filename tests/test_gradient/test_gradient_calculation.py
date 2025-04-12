@@ -3,9 +3,9 @@ import numpy as np
 
 from quantum_launcher.routines.qiskit_routines import QiskitBackend
 
-from qlearning.circuit import build_circuit, RotationalEncoder, CXEntangler, AmplitudeEncoder
-from qlearning.circuit.utils import param_map, filter_params
-from qlearning.gradient.gradient_calculation import calculate_jacobian
+from qailab.circuit import build_circuit, RotationalEncoder, CXEntangler, AmplitudeEncoder
+from qailab.circuit.utils import param_map, filter_params
+from qailab.gradient.gradient_calculation import calculate_jacobian
 
 
 def _prepare_circuit():
