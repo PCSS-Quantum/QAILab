@@ -12,6 +12,7 @@ dependencies = [
     "scikit-learn",
     "pandas",
     "requests",
+    "quantum_launcher"
 ]
 
 [tool.setuptools.packages.find]
