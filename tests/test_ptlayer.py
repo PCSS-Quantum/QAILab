@@ -12,7 +12,7 @@ from qailab.torch.qmodel import QModel
 from qailab.torch.qlayer import QLayer
 
 
-ORCALayer = pytest.importorskip('qlearning.torch.orca_layer.ORCALayer')
+ORCALayer = pytest.importorskip('qailab.torch.orca_layer.ORCALayer')
 HybridOptimizer = pytest.importorskip('ptseries.optimizers.HybridOptimizer')
 
 
