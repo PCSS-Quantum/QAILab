@@ -83,7 +83,8 @@ class QModel(BaseEstimator):
     epochs: int
     validation_fraction: float
     shuffle: bool
-    device: Literal["cpu", "cuda", "mps"] = "cpu"
+    device: Literal["cpu", "cuda", "mps"]
+    metric: Literal["accuracy", "mse"] | None
 
     def __init__(
         self,
@@ -97,7 +98,7 @@ class QModel(BaseEstimator):
         validation_fraction: float = 0.2,
         shuffle: bool = True,
         device: Literal["cpu", "cuda", "mps"] = "cpu",
-        metric: Literal["accuracy", "mse"] = "accuracy"
+        metric: Literal["accuracy", "mse"] | None = None
     ):
         super().__init__()
         self.module = module
@@ -221,6 +222,8 @@ class QModel(BaseEstimator):
 
     @staticmethod
     def _accuracy(y_pred, y_gt):
+        if y_gt.dim() == 2:
+            y_gt = torch.argmax(y_gt, dim=1)
         return (torch.argmax(y_pred, dim=1).eq(y_gt)).sum().item() / len(y_gt)
 
     @staticmethod
