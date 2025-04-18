@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 class PTAdapter(PT):
     """ Adapter for PT tbi """
+    # pylint:disable=too-few-public-methods
 
     def __init__(  # pylint: disable=super-init-not-called
         self,
@@ -77,7 +78,8 @@ class PTAdapter(PT):
         input_state: list[int] | tuple[int, ...],
         bs_angles: list[float] | tuple[float, ...],
         n_samples: int,
-        save_dir: FILE_LIKE | None = None,
+        # TODO: figure out if we should do anything with this arg
+        save_dir: FILE_LIKE | None = None,  # pylint:disable=unused-argument
     ) -> npt.NDArray[np.int_]:
         """Prepares and sends sample request to PT.
 
