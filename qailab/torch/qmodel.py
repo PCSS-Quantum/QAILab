@@ -224,7 +224,11 @@ class QModel(BaseEstimator):
     def _accuracy(y_pred, y_gt):
         if y_gt.dim() == 2:
             y_gt = torch.argmax(y_gt, dim=1)
-        return (torch.argmax(y_pred, dim=1).eq(y_gt)).sum().item() / len(y_gt)
+        if y_pred.dim() == 2:
+            y_pred = torch.argmax(y_pred, dim=1)
+        else:
+            y_pred = torch.where(y_pred > 0.5, 1.0, 0.0)
+        return (y_pred.eq(y_gt)).sum().item() / len(y_gt)
 
     @staticmethod
     def _mse(y_pred, y_gt):
