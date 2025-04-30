@@ -5,9 +5,9 @@ description = "Library providing easy to use PyTorch compatible Quantum Neural N
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "qiskit>=1.4.0",
+    "qiskit>=1.4.0,<2.0",
     "qiskit-machine-learning>=0.8.2",
-    "torch>=2.5.0",
+    "torch",
     "tqdm",
     "scikit-learn",
     "pandas",

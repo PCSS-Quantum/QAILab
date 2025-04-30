@@ -3,7 +3,7 @@ qiskit-machine-learning>=0.8.2
 scikit-learn
 tqdm
 pandas
-torch>=2.5
+torch
 docplex<2.29
 cplex
 requests
