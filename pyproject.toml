@@ -1,6 +1,6 @@
 [project]
 name = "QAILab"
-version = "0.1.0"
+version = "0.1.2"
 description = "Library providing easy to use PyTorch compatible Quantum Neural Network Layers for both universal and photonic quantum computers."
 readme = "README.md"
 requires-python = ">=3.11"
