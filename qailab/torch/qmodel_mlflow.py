@@ -8,26 +8,6 @@ import numpy as np
 import pandas as pd
 import mlflow
 from .qmodel import QModel
-try:
-    from ptseries.optimizers import HybridOptimizer
-except ImportError:
-    class HybridOptimizer():
-        """Dummy HO"""
-        # pylint: disable=too-few-public-methods
-
-        def __init__(
-            self,
-            model,
-            lr_classical=0.01,
-            lr_quantum=0.01,
-            optimizer_quantum='SGD',
-            optimizer_classical='Adam',
-            betas=(0.9, 0.999),
-            spsa_resamplings=1,
-            spsa_gamma_decay=0.101,
-            spsa_alpha_decay=0.602
-        ):
-            pass
 
 
 class MLFlowQModel(QModel):
@@ -37,7 +17,7 @@ class MLFlowQModel(QModel):
         self,
         module: nn.Module,
         loss: Callable,
-        optimizer_type: type[Optimizer] | type[HybridOptimizer] | str = 'adamw',
+        optimizer_type: type[Optimizer] | str = 'adamw',
         learning_rate: float | Literal['auto'] = 'auto',
         quantum_learning_rate: float | Literal['auto'] = 'auto',
         batch_size: int = 1,
@@ -52,21 +32,6 @@ class MLFlowQModel(QModel):
         self._epoch = 0
 
     def fit(self, x: Tensor | np.ndarray | pd.DataFrame, y: Tensor | np.ndarray | pd.DataFrame | pd.Series) -> "QModel":
-        """ scikit-learn like fit method
-        trains the neural network based on training set (x,y).
-
-        Parameters
-        ----------
-        x: Tensor | np.ndarray | pd.DataFrame
-            The training input samples of shape (n_samples, n_features).
-        y: Tensor | np.array | pd.DataFrame | pd.Series
-            The training target values of shape (n_samples,) or (n_samples, n_outputs)
-
-        Returns
-        -------
-        self: QModel
-            trained NN model
-        """
         with mlflow.start_run():
             mlflow.log_params({k: v for k, v in self.__dict__.items() if isinstance(v, (int, float, str, bool))})
             res = super().fit(x, y)
