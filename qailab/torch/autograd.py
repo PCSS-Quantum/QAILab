@@ -6,6 +6,7 @@ from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 
 from quantum_launcher import QuantumLauncher
+from quantum_launcher.launcher.aql import AQL
 
 from qailab.utils import distribution_to_array
 from qailab.circuit.utils import filter_params, assign_input_weight
@@ -102,16 +103,16 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
 
         res = launcher_backward.run(parameters=params, auto_bind=False)
 
-        out_grad_numpy = grad_output.cpu().detach().numpy()
-
-        grad_input = res.result['input'] @ out_grad_numpy
-        # Allow for weightless QNN layers
-        grad_weight = res.result['weight'] @ out_grad_numpy if len(res.result['weight']) > 0 else np.array([])
+        grad_input = res.result['input']
+        grad_weight = res.result['weight']
 
         # Scale gradient values because we are optimizing weights initialized in range <0,2pi>
         return (
-            torch.tensor(grad_input, dtype=fn_in.dtype).to(fn_in.device),
-            torch.tensor(grad_weight, dtype=weight.dtype).to(fn_in.device) * np.pi,
+            torch.tensor(grad_input @ grad_output, dtype=fn_in.dtype).to(fn_in.device),
+            # Allow for weightless QNN layers
+            torch.tensor(grad_weight @ grad_output
+                         if len(res.result['weight']) > 0 else
+                         torch.tensor([], dtype=weight.dtype), dtype=weight.dtype).to(fn_in.device) * np.pi,
         )
 
     @staticmethod
@@ -144,6 +145,152 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
             igrad, wgrad = ExpVQCFunction._backward_single(in_single, weight, launcher_backward, grad_single)
             input_grads.append(igrad)
             weight_grads.append(wgrad)
+
+        return torch.stack(input_grads), torch.stack(weight_grads), None, None
+
+
+class ExpVQCFunctionMP(Function):  # pylint: disable=abstract-method
+    """Class implementing forward and backward calculations for ExpQLayer"""
+    @staticmethod
+    def _forward_single(
+        fn_in: torch.Tensor,
+        weight: torch.Tensor,
+        launcher_forward: QuantumLauncher,
+        aql_instance: AQL
+    ):
+        fn_in_numpy = fn_in.cpu().detach().numpy()
+        weight_numpy = weight.cpu().detach().numpy()
+
+        params = assign_input_weight(
+            launcher_forward.problem.instance,
+            fn_in_numpy,
+            weight_numpy
+        )
+
+        aql_instance.add_task(launcher_forward, parameters=params)
+
+    @staticmethod
+    def forward(  # pylint: disable=arguments-differ
+        fn_in: torch.Tensor,
+        weight: torch.Tensor,
+        launchers_forward: list[QuantumLauncher],
+        launchers_backward: list[QuantumLauncher]  # pylint: disable=unused-argument
+    ) -> torch.Tensor:
+        """
+        Calculation of forward pass.
+
+        Args:
+            fn_in (torch.Tensor): Input tensor.
+            weight (torch.Tensor): Layer weights.
+            launcher_forward (QuantumLauncher): Qlauncher with forward pass algorithm.
+            launcher_backward (QuantumLauncher):
+            Qlauncher with backward pass algorithm.
+            Not used in forward, but needed here as it will get passed to setup_context()
+
+        Returns:
+            torch.Tensor: Distribution of forward pass.
+        """
+
+        is_batch = _is_batch_input(fn_in, len(filter_params(launchers_forward[0].problem.instance, 'input')))
+
+        with AQL('default') as aql_instance:
+
+            if not is_batch:
+                fn_in = fn_in.unsqueeze(0)
+                weight = weight.unsqueeze(0)
+
+            for i, single_in in enumerate(fn_in):
+                ExpVQCFunctionMP._forward_single(single_in, weight, launchers_forward[i % len(launchers_forward)], aql_instance)
+
+            aql_instance.start()
+
+            outs = []
+            for res in aql_instance.results():
+                arr = distribution_to_array(res.distribution)
+                t = torch.tensor(arr, dtype=fn_in.dtype, requires_grad=True).to(fn_in.device)
+                outs.append(t)
+        if not is_batch:
+            return outs[0]
+        return torch.stack(outs)
+
+    @staticmethod
+    def setup_context(ctx, inputs, output):
+        """
+        Called after forward, saves args from forward to be later used in backward.
+
+        Args:
+            ctx: Context object that holds information.
+            inputs: args to forward()
+            outputs: outputs from forward()
+        """
+        fn_in, weight, launchers_forward, launchers_backward = inputs
+        ctx.save_for_backward(fn_in, weight, output)
+        ctx.launchers_forward = launchers_forward
+        ctx.launchers_backward = launchers_backward
+        ctx.is_batch = _is_batch_input(fn_in, len(filter_params(launchers_forward[0].problem.instance, 'input')))
+
+    @staticmethod
+    def _backward_single(
+        fn_in,
+        weight,
+        launcher_backward,
+        aql_instance: AQL
+    ):
+        fn_in_numpy = fn_in.cpu().detach().numpy()
+        weight_numpy = weight.cpu().detach().numpy()
+
+        params = assign_input_weight(
+            launcher_backward.problem.instance,
+            fn_in_numpy,
+            weight_numpy
+        )
+
+        aql_instance.add_task(launcher_backward, parameters=params, auto_bind=False)
+
+    @staticmethod
+    @once_differentiable
+    def backward(  # pylint: disable=arguments-differ, too-many-locals
+        ctx,
+        grad_output: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, None, None]:
+        """
+        Calculation of backward pass.
+
+        Args:
+            ctx: Context object supplied by autograd. Contains saved tensors and qlaunchers.
+            grad_output (torch.Tensor): Grad from next layer.
+
+        Returns:
+            tuple[torch.Tensor,torch.Tensor,None,None]:
+            Grad for inputs, Grad for weights, rest irrelevant.
+            (each forward argument needs to get something, but launchers don't need grad)
+        """
+        forward_tensors = ctx.saved_tensors
+        fn_in, weight = forward_tensors[:2]
+        launchers_backward = ctx.launchers_backward
+        with AQL('default') as aql_instance:
+
+            if not ctx.is_batch:
+                fn_in = fn_in.unsqueeze(0)
+                grad_output = grad_output.unsqueeze(0)
+
+            input_grads, weight_grads = [], []
+            for i, (in_single) in enumerate(fn_in):
+                ExpVQCFunctionMP._backward_single(
+                    in_single, weight, launchers_backward[i % len(launchers_backward)], aql_instance)
+
+            aql_instance.start()
+            results = aql_instance.results()
+
+            for res, out_grad in zip(results, grad_output):
+                ingrad = torch.tensor(res.result['input'], dtype=fn_in.dtype).to(fn_in.device)
+                wgrad = torch.tensor(res.result['weight'] if len(res.result['weight']) > 0 else [], dtype=fn_in.dtype).to(fn_in.device)
+
+                input_grads.append(ingrad @ out_grad)
+                weight_grads.append(wgrad @ out_grad)
+
+        if not ctx.is_batch:
+            return input_grads[0], weight_grads[0], None, None
 
         return torch.stack(input_grads), torch.stack(weight_grads), None, None
 

@@ -17,7 +17,7 @@ class ExpectedValueQLayer(QLayer):
         self,
         circuit: QuantumCircuit,
         *,
-        backend: QiskitBackend | None = None,
+        backends: QiskitBackend | list[QiskitBackend] | None = None,
         shots: int = 1024,
         rescale_output: tuple[float, float] | None = None
     ) -> None:
@@ -30,7 +30,7 @@ class ExpectedValueQLayer(QLayer):
             Tuple of (low, high) representing a range to rescale output to.
             If None the output will be in range <0, 2^num_measured_qubits - 1>. Defaults to None.
         """
-        super().__init__(circuit, backend=backend, shots=shots)
+        super().__init__(circuit, backends=backends, shots=shots)
         self._max_expected_out_value = self.out_features - 1
         self.out_features = 1
         self._rescale_output_range = rescale_output
@@ -70,8 +70,8 @@ class ArgmaxQLayer(QLayer):
     The value is a whole number in range <0, 2^num_measured_qubits - 1>
     """
 
-    def __init__(self, circuit: QuantumCircuit, *, backend: QiskitBackend | None = None, shots: int = 1024) -> None:
-        super().__init__(circuit, backend=backend, shots=shots)
+    def __init__(self, circuit: QuantumCircuit, *, backends: QiskitBackend | list[QiskitBackend] | None = None, shots: int = 1024) -> None:
+        super().__init__(circuit, backends=backends, shots=shots)
         self.out_features = 1
 
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
