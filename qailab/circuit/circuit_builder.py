@@ -21,7 +21,7 @@ def build_circuit(
         circuit_width (int): Number of qubits used for the circuit (not including auxiliary qubits).
         blocks (list[CircuitBlock] | None, optional): Blocks making up the circuit. Defaults to None.
         measure_qubits (Sequence[QubitSpecifier] | None, optional):
-        Which qubits to measure. If None, measure all, except auxiliary. Defaults to None.
+            Which qubits to measure. If None, measure all, except auxiliary. Defaults to None.
 
     Returns:
         QuantumCircuit: Built circuit
