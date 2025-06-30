@@ -13,7 +13,7 @@ from ptseries.tbi.tbi_abstract import TBIDevice
 from qailab.orca_api.networking import OrcaTask
 
 if TYPE_CHECKING:
-    FILE_LIKE: TypeAlias = str | os.PathLike
+    FILE_LIKE: TypeAlias = str | os.PathLike  # pylint: disable=invalid-name
 
 
 class PTAdapter(PT):
