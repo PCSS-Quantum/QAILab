@@ -108,11 +108,11 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
 
         # Scale gradient values because we are optimizing weights initialized in range <0,2pi>
         return (
-            torch.tensor(grad_input @ grad_output, dtype=fn_in.dtype).to(fn_in.device),
+            torch.tensor(grad_input, dtype=fn_in.dtype).to(fn_in.device) @ grad_output,
             # Allow for weightless QNN layers
-            torch.tensor(grad_weight @ grad_output
-                         if len(res.result['weight']) > 0 else
-                         torch.tensor([], dtype=weight.dtype), dtype=weight.dtype).to(fn_in.device) * np.pi,
+            torch.tensor(grad_weight, dtype=weight.dtype).to(fn_in.device) @ grad_output * np.pi
+            if len(res.result['weight']) > 0 else
+            torch.tensor([], dtype=weight.dtype)
         )
 
     @staticmethod
@@ -336,5 +336,5 @@ class ArgMax(Function):  # pylint: disable=abstract-method
         """
         fn_in, idx = ctx.saved_tensors
         grad_input = torch.zeros(fn_in.shape, device=fn_in.device, dtype=fn_in.dtype)
-        grad_input.scatter_(-1, torch.tensor(idx, dtype=torch.int64), grad_output.sum(-1, keepdim=True))
+        grad_input.scatter_(-1, idx.detach().clone().requires_grad_(True).type(torch.int64), grad_output.sum(-1, keepdim=True))
         return (grad_input,)

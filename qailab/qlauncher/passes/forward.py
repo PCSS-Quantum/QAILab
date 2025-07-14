@@ -44,8 +44,8 @@ class ForwardPass(Algorithm):
     def _extract_results_v2(self, result: PrimitiveResult) -> list[dict]:
         distributions = []
         for pub in result._pub_results:  # pylint: disable=protected-access
-            data = pub.data['c'].array
-            num_qubits = pub.data['c'].num_bits
+            data = pub.data[list(pub.data.keys())[0]].array
+            num_qubits = pub.data[list(pub.data.keys())[0]].num_bits
             distribution = defaultdict(float)
             for datum_arr in data:
                 # Qiskit splits measurements into 8 bit chunks for some godforsaken reason.
