@@ -4,6 +4,7 @@ stages:
   - testing and code analysis
   - deploy
   - publish
+  - mirror
 
 default:
   before_script:
@@ -51,3 +52,23 @@ publish:
     - twine upload dist/* -u "$PyPI_USERNAME" -p "$PyPI_PASSWORD"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+
+mirror:
+  stage: mirror
+  variables:
+    GIT_DEPTH: 0
+    GIT_STRATEGY: clone
+  script:
+    - git remote add github https://x-access-token:${GITHUB_TOKEN}@github.com/PCSS-Quantum/QAILab.git
+    - git fetch origin
+    - git fetch github
+
+    - git checkout -b main origin/main || true
+    - git push github main:main
+
+    - git checkout -b dev origin/dev || true
+    - git push github dev:dev
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
