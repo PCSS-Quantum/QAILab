@@ -3,8 +3,8 @@ import torch
 
 import numpy as np
 
-from quantum_launcher import QuantumLauncher
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher import QuantumLauncher
+from qlauncher.routines.qiskit_routines import QiskitBackend
 
 from qailab.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 

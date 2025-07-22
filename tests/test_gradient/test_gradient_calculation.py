@@ -1,7 +1,7 @@
 """Test gradient calculation"""
 import numpy as np
 
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher.routines.qiskit_routines import QiskitBackend
 
 from qailab.circuit import build_circuit, RotationalEncoder, CXEntangler, AmplitudeEncoder
 from qailab.circuit.utils import param_map, filter_params

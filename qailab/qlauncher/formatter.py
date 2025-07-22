@@ -1,7 +1,7 @@
 """ Formatter implementation translating for circuit parametrization. """
 from collections.abc import Iterable, Mapping, Sequence
 from copy import deepcopy
-from quantum_launcher.base.adapter_structure import formatter
+from qlauncher.base.adapter_structure import formatter
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info.states.statevector import Statevector
 

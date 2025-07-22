@@ -1,6 +1,6 @@
 """Test if circuit builder circuits run with passes"""
-from quantum_launcher import QuantumLauncher, Result
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher import QuantumLauncher, Result
+from qlauncher.routines.qiskit_routines import QiskitBackend
 
 from qailab.circuit import RotationalEncoder, build_circuit
 from qailab.circuit.utils import assign_input_weight

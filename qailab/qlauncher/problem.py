@@ -1,5 +1,5 @@
 """ QLauncher problem implementation """
-from quantum_launcher.base import Problem
+from qlauncher.base import Problem
 
 
 class CircuitProblem(Problem):

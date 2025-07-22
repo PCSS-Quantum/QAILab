@@ -7,4 +7,4 @@ torch
 docplex<2.29
 cplex
 requests
-quantum_launcher
+qlauncher

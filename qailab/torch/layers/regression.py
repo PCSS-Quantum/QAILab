@@ -1,6 +1,6 @@
 """Attempts at regression compatible layers"""
 from qiskit import QuantumCircuit
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher.routines.qiskit_routines import QiskitBackend
 import torch
 
 from qailab.torch.qlayer import QLayer

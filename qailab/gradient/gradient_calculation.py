@@ -12,8 +12,8 @@ from qiskit_machine_learning.gradients import (
     ParamShiftSamplerGradient,
 )
 
-from quantum_launcher.base.base import Backend
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher.base.base import Backend
+from qlauncher.routines.qiskit_routines import QiskitBackend
 
 
 def _param_grads_to_jacobian(grads, num_possible_values) -> np.ndarray:

@@ -1,8 +1,8 @@
-""" Backward pass algorithm implementation in quantum_launcher. """
+""" Backward pass algorithm implementation in qlauncher. """
 from collections.abc import Callable
 from typing import Any, Literal
-from quantum_launcher.base.base import Backend, Problem, Result
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher.base.base import Backend, Problem, Result
+from qlauncher.routines.qiskit_routines import QiskitBackend
 from qailab.qlauncher.passes.forward import ForwardPass
 from qailab.gradient.gradient_calculation import calculate_jacobian
 
@@ -15,7 +15,7 @@ class BackwardPass(ForwardPass):
         self.shots = shots
         super().__init__()
 
-    def run(self, problem: Problem, backend: Backend, formatter: Callable[..., Any] | None = None) -> Result:
+    def _run(self, problem: Problem, backend: Backend, formatter: Callable[..., Any] | None = None) -> Result:
         if formatter is None:
             raise ValueError('Formatter for Backward pass not found!')
         if not isinstance(backend, QiskitBackend):
@@ -45,5 +45,11 @@ class BackwardPass(ForwardPass):
             self.gradient_method,
             self.shots
         )
-
         return Result('', 0, '', 0, {}, {}, self.shots, 0, 0, {'input': input_jacobian, 'weight': weight_jacobian})
+
+    def run(self, problem: Problem, backend: Backend, formatter: Callable[..., Any] | None = None) -> Result:
+        # TODO multiprocessed layers sometimes freeze execution on KeyboardInterrupt. This helps somewhat but it still happens
+        try:
+            return self._run(problem, backend, formatter)
+        except KeyboardInterrupt:
+            return None

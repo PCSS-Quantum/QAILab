@@ -7,8 +7,8 @@ from torch import Tensor, nn
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
-from quantum_launcher import QuantumLauncher
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher import QuantumLauncher
+from qlauncher.routines.qiskit_routines import QiskitBackend
 
 from qailab.circuit.utils import filter_params
 from qailab.qlauncher import CircuitProblem, ForwardPass, BackwardPass

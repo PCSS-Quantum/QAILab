@@ -5,8 +5,8 @@ import torch
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 
-from quantum_launcher import QuantumLauncher
-from quantum_launcher.launcher.aql import AQL
+from qlauncher import QuantumLauncher
+from qlauncher.launcher.aql import AQL
 
 from qailab.utils import distribution_to_array
 from qailab.circuit.utils import filter_params, assign_input_weight
@@ -27,8 +27,8 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         weight: torch.Tensor,
         launcher_forward: QuantumLauncher,
     ) -> torch.Tensor:
-        fn_in_numpy = fn_in.cpu().detach().numpy()
-        weight_numpy = weight.cpu().detach().numpy()
+        fn_in_numpy = fn_in.detach().numpy()
+        weight_numpy = weight.detach().numpy()
 
         params = assign_input_weight(
             launcher_forward.problem.instance,
@@ -92,8 +92,8 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         launcher_backward,
         grad_output
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        fn_in_numpy = fn_in.cpu().detach().numpy()
-        weight_numpy = weight.cpu().detach().numpy()
+        fn_in_numpy = fn_in.detach().numpy()
+        weight_numpy = weight.detach().numpy()
 
         params = assign_input_weight(
             launcher_backward.problem.instance,

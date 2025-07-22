@@ -1,8 +1,8 @@
 """Test the backward pass"""
 import numpy as np
 
-from quantum_launcher import QuantumLauncher, Result
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher import QuantumLauncher, Result
+from qlauncher.routines.qiskit_routines import QiskitBackend
 
 from qailab.circuit import build_circuit, RotationalEncoder
 from qailab.circuit.utils import assign_input_weight

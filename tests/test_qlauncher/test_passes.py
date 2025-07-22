@@ -1,8 +1,8 @@
 """ Forward pass tests """
 import math
 
-from quantum_launcher import QuantumLauncher, Result
-from quantum_launcher.routines.qiskit_routines import QiskitBackend, AQTBackend
+from qlauncher import QuantumLauncher, Result
+from qlauncher.routines.qiskit_routines import QiskitBackend, AQTBackend
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 

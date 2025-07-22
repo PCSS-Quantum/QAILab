@@ -1,10 +1,10 @@
-""" Forward pass algorithm implementation in quantum_launcher. """
+""" Forward pass algorithm implementation in qlauncher. """
 from collections import defaultdict
 from collections.abc import Callable
 from typing import Any
-from quantum_launcher.base import Algorithm
-from quantum_launcher.base.base import Backend, Problem, Result
-from quantum_launcher.routines.qiskit_routines import QiskitBackend
+from qlauncher.base import Algorithm
+from qlauncher.base.base import Backend, Problem, Result
+from qlauncher.routines.qiskit_routines import QiskitBackend
 from qiskit.primitives.containers.primitive_result import PrimitiveResult
 from qiskit.primitives.base.sampler_result import SamplerResult
 
@@ -24,7 +24,7 @@ class ForwardPass(Algorithm):
         self.shots = shots
         super().__init__()
 
-    def run(self, problem: Problem, backend: Backend, formatter: Callable[..., Any] | None = None) -> Result:
+    def _run(self, problem: Problem, backend: Backend, formatter: Callable[..., Any] | None = None) -> Result:
         if formatter is None:
             raise ValueError('Formatter for Forward pass not found!')
         if not isinstance(backend, QiskitBackend):
@@ -40,6 +40,13 @@ class ForwardPass(Algorithm):
         else:
             raise ValueError(f'Result with type: {type(result)} is not supported')
         return Result('', 0, '', 0, distribution, {}, self.shots, 0, 0, None)  # Results are not picklable
+
+    def run(self, problem: Problem, backend: Backend, formatter: Callable[..., Any] | None = None) -> Result | None:
+        # TODO multiprocessed layers sometimes freeze execution on KeyboardInterrupt. This helps somewhat but it still happens
+        try:
+            return self._run(problem, backend, formatter)
+        except KeyboardInterrupt:
+            return None
 
     def _extract_results_v2(self, result: PrimitiveResult) -> list[dict]:
         distributions = []

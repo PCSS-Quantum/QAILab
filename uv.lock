@@ -2365,9 +2365,9 @@ dependencies = [
     { name = "qiskit-optimization" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d3/91/0700ad3f4f82e62f95f1485b543a60a5ba9d6d30ddf1bb1695d4fd35f94f/quantum_launcher-2.0.4.tar.gz", hash = "sha256:1f19f771e42635ba69cd784c2df7066fcda65359dba7c2f04b866e5a4c7d3778", size = 50109 }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/91/0700ad3f4f82e62f95f1485b543a60a5ba9d6d30ddf1bb1695d4fd35f94f/qlauncher-2.0.4.tar.gz", hash = "sha256:1f19f771e42635ba69cd784c2df7066fcda65359dba7c2f04b866e5a4c7d3778", size = 50109 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/91/4f/fe423104d7a029cb73ed3f0074f513f6a29a22e14f36931152d910bd6bd7/quantum_launcher-2.0.4-py3-none-any.whl", hash = "sha256:962e87660af50f6992ae05a3b807e933b87a2bc41707a49d192a8b58e99cbdc3", size = 69075 },
+    { url = "https://files.pythonhosted.org/packages/91/4f/fe423104d7a029cb73ed3f0074f513f6a29a22e14f36931152d910bd6bd7/qlauncher-2.0.4-py3-none-any.whl", hash = "sha256:962e87660af50f6992ae05a3b807e933b87a2bc41707a49d192a8b58e99cbdc3", size = 69075 },
 ]
 
 [[package]]
