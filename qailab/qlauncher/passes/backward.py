@@ -2,7 +2,7 @@
 from collections.abc import Callable
 from typing import Any, Literal
 from qlauncher.base.base import Backend, Problem, Result
-from qlauncher.routines.qiskit_routines import QiskitBackend
+from qlauncher.routines.qiskit import QiskitBackend
 from qailab.qlauncher.passes.forward import ForwardPass
 from qailab.gradient.gradient_calculation import calculate_jacobian
 

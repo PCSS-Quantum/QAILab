@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from qlauncher.base import Algorithm
 from qlauncher.base.base import Backend, Problem, Result
-from qlauncher.routines.qiskit_routines import QiskitBackend
+from qlauncher.routines.qiskit import QiskitBackend
 from qiskit.primitives.containers.primitive_result import PrimitiveResult
 from qiskit.primitives.base.sampler_result import SamplerResult
 

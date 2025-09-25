@@ -7,8 +7,8 @@ from torch import Tensor, nn
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library.generalized_gates.isometry import Isometry
 
-from qlauncher import QuantumLauncher
-from qlauncher.routines.qiskit_routines import QiskitBackend
+from qlauncher import QLauncher
+from qlauncher.routines.qiskit import QiskitBackend
 
 from qailab.circuit.utils import filter_params
 from qailab.qlauncher import CircuitProblem, ForwardPass, BackwardPass
@@ -59,14 +59,14 @@ class QLayer(nn.Module):
         self.out_features = 2**self.circuit.num_clbits
 
         self.launchers_forward = [
-            QuantumLauncher(
+            QLauncher(
                 CircuitProblem(transpile(circuit, backend.sampler.backend) if hasattr(backend.sampler, 'backend') else circuit),
                 ForwardPass(shots=shots),
                 backend)
             for backend in backends]
 
         self.launchers_backward = [
-            QuantumLauncher(
+            QLauncher(
                 CircuitProblem(transpile(circuit, backend.sampler.backend) if hasattr(backend.sampler, 'backend') else circuit),
                 BackwardPass('param_shift', shots=shots),
                 backend)

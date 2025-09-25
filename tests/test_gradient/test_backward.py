@@ -1,8 +1,8 @@
 """Test the backward pass"""
 import numpy as np
 
-from qlauncher import QuantumLauncher, Result
-from qlauncher.routines.qiskit_routines import QiskitBackend
+from qlauncher import QLauncher, Result
+from qlauncher.routines.qiskit import QiskitBackend
 
 from qailab.circuit import build_circuit, RotationalEncoder
 from qailab.circuit.utils import assign_input_weight
@@ -23,7 +23,7 @@ def test_runs_backward():
     algo = BackwardPass()
     be = QiskitBackend('local_simulator')
 
-    ql = QuantumLauncher(circp, algo, be)
+    ql = QLauncher(circp, algo, be)
 
     res = ql.run(
         auto_bind=False,

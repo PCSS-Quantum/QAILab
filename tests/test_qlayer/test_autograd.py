@@ -3,8 +3,8 @@ import torch
 
 import numpy as np
 
-from qlauncher import QuantumLauncher
-from qlauncher.routines.qiskit_routines import QiskitBackend
+from qlauncher import QLauncher
+from qlauncher.routines.qiskit import QiskitBackend
 
 from qailab.qlauncher import CircuitProblem, ForwardPass, BackwardPass
 
@@ -32,8 +32,8 @@ def _run_forward():
 
     backend = QiskitBackend('local_simulator')
 
-    launcher_forward = QuantumLauncher(circ_p, ForwardPass(shots=1024), backend)
-    launcher_backward = QuantumLauncher(circ_p, BackwardPass('param_shift', shots=1024), backend)
+    launcher_forward = QLauncher(circ_p, ForwardPass(shots=1024), backend)
+    launcher_backward = QLauncher(circ_p, BackwardPass('param_shift', shots=1024), backend)
 
     apply = ExpVQCFunction.apply
 

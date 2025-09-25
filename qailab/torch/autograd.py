@@ -5,7 +5,7 @@ import torch
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 
-from qlauncher import QuantumLauncher
+from qlauncher import QLauncher
 from qlauncher.launcher.aql import AQL
 
 from qailab.utils import distribution_to_array
@@ -25,7 +25,7 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
     def _forward_single(
         fn_in: torch.Tensor,
         weight: torch.Tensor,
-        launcher_forward: QuantumLauncher,
+        launcher_forward: QLauncher,
     ) -> torch.Tensor:
         fn_in_numpy = fn_in.detach().numpy()
         weight_numpy = weight.detach().numpy()
@@ -45,8 +45,8 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
     def forward(  # pylint: disable=arguments-differ
         fn_in: torch.Tensor,
         weight: torch.Tensor,
-        launcher_forward: QuantumLauncher,
-        launcher_backward: QuantumLauncher  # pylint: disable=unused-argument
+        launcher_forward: QLauncher,
+        launcher_backward: QLauncher  # pylint: disable=unused-argument
     ) -> torch.Tensor:
         """
         Calculation of forward pass.
@@ -54,8 +54,8 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         Args:
             fn_in (torch.Tensor): Input tensor.
             weight (torch.Tensor): Layer weights.
-            launcher_forward (QuantumLauncher): Qlauncher with forward pass algorithm.
-            launcher_backward (QuantumLauncher):
+            launcher_forward (QLauncher): Qlauncher with forward pass algorithm.
+            launcher_backward (QLauncher):
             Qlauncher with backward pass algorithm.
             Not used in forward, but needed here as it will get passed to setup_context()
 
@@ -155,7 +155,7 @@ class ExpVQCFunctionMP(Function):  # pylint: disable=abstract-method
     def _forward_single(
         fn_in: torch.Tensor,
         weight: torch.Tensor,
-        launcher_forward: QuantumLauncher,
+        launcher_forward: QLauncher,
         aql_instance: AQL
     ):
         fn_in_numpy = fn_in.cpu().detach().numpy()
@@ -173,8 +173,8 @@ class ExpVQCFunctionMP(Function):  # pylint: disable=abstract-method
     def forward(  # pylint: disable=arguments-differ
         fn_in: torch.Tensor,
         weight: torch.Tensor,
-        launchers_forward: list[QuantumLauncher],
-        launchers_backward: list[QuantumLauncher]  # pylint: disable=unused-argument
+        launchers_forward: list[QLauncher],
+        launchers_backward: list[QLauncher]  # pylint: disable=unused-argument
     ) -> torch.Tensor:
         """
         Calculation of forward pass.
@@ -182,8 +182,8 @@ class ExpVQCFunctionMP(Function):  # pylint: disable=abstract-method
         Args:
             fn_in (torch.Tensor): Input tensor.
             weight (torch.Tensor): Layer weights.
-            launcher_forward (QuantumLauncher): Qlauncher with forward pass algorithm.
-            launcher_backward (QuantumLauncher):
+            launcher_forward (QLauncher): Qlauncher with forward pass algorithm.
+            launcher_backward (QLauncher):
             Qlauncher with backward pass algorithm.
             Not used in forward, but needed here as it will get passed to setup_context()
 

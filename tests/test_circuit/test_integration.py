@@ -1,6 +1,6 @@
 """Test if circuit builder circuits run with passes"""
-from qlauncher import QuantumLauncher, Result
-from qlauncher.routines.qiskit_routines import QiskitBackend
+from qlauncher import QLauncher, Result
+from qlauncher.routines.qiskit import QiskitBackend
 
 from qailab.circuit import RotationalEncoder, build_circuit
 from qailab.circuit.utils import assign_input_weight
@@ -19,7 +19,7 @@ def test_runs_forward():
     algo = ForwardPass()
     be = QiskitBackend('local_simulator')
 
-    ql = QuantumLauncher(circp, algo, be)
+    ql = QLauncher(circp, algo, be)
     m = assign_input_weight(
         c,
         [0, 0],

@@ -13,7 +13,7 @@ from qiskit_machine_learning.gradients import (
 )
 
 from qlauncher.base.base import Backend
-from qlauncher.routines.qiskit_routines import QiskitBackend
+from qlauncher.routines.qiskit import QiskitBackend
 
 
 def _param_grads_to_jacobian(grads, num_possible_values) -> np.ndarray:
