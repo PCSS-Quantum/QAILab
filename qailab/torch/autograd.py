@@ -193,11 +193,10 @@ class ExpVQCFunctionMP(Function):  # pylint: disable=abstract-method
 
         is_batch = _is_batch_input(fn_in, len(filter_params(launchers_forward[0].problem.instance, 'input')))
 
-        with AQL('default') as aql_instance:
+        if not is_batch:
+            fn_in = fn_in.unsqueeze(0)
 
-            if not is_batch:
-                fn_in = fn_in.unsqueeze(0)
-                weight = weight.unsqueeze(0)
+        with AQL('default') as aql_instance:
 
             for i, single_in in enumerate(fn_in):
                 ExpVQCFunctionMP._forward_single(single_in, weight, launchers_forward[i % len(launchers_forward)], aql_instance)
