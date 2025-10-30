@@ -104,15 +104,15 @@ class ExpVQCFunction(Function):  # pylint: disable=abstract-method
         res = launcher_backward.run(parameters=params, auto_bind=False)
 
         grad_input = res.result['input']
+        # Allow for weightless QNN layers
         grad_weight = res.result['weight']
 
         # Scale gradient values because we are optimizing weights initialized in range <0,2pi>
         return (
             torch.tensor(grad_input, dtype=fn_in.dtype).to(fn_in.device) @ grad_output,
-            # Allow for weightless QNN layers
-            torch.tensor(grad_weight, dtype=weight.dtype).to(fn_in.device) @ grad_output * np.pi
+            (torch.tensor(grad_weight, dtype=weight.dtype).to(fn_in.device) * np.pi  @ grad_output)
             if len(res.result['weight']) > 0 else
-            torch.tensor([], dtype=weight.dtype)
+            torch.tensor([], dtype=weight.dtype).to(fn_in.device),
         )
 
     @staticmethod
