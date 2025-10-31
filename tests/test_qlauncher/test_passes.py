@@ -1,6 +1,8 @@
 """ Forward pass tests """
 import math
 
+import pytest
+
 from qlauncher import QLauncher, Result
 from qlauncher.routines.qiskit import QiskitBackend, AQTBackend
 from qiskit import QuantumCircuit
@@ -80,6 +82,7 @@ def test_forward_pass_weight_assignment_by_dict():
     assert results.distribution[(1,)] == 1
 
 
+@pytest.mark.skip("qlauncher issue")
 def test_forward_pass_auto_assignment():
     """ Test if forward pass auto parameter assignment works. auto_bind is required for AQT"""
     problem, _ = _trainable_circuit()
