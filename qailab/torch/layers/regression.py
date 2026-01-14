@@ -1,10 +1,11 @@
 """Attempts at regression compatible layers"""
+
+import torch
 from qiskit import QuantumCircuit
 from qlauncher.routines.qiskit import QiskitBackend
-import torch
 
-from qailab.torch.qlayer import QLayer
 from qailab.torch.autograd import ArgMax
+from qailab.torch.qlayer import QLayer
 
 
 class ExpectedValueQLayer(QLayer):
@@ -19,7 +20,7 @@ class ExpectedValueQLayer(QLayer):
         *,
         backends: QiskitBackend | list[QiskitBackend] | None = None,
         shots: int = 1024,
-        rescale_output: tuple[float, float] | None = None
+        rescale_output: tuple[float, float] | None = None,
     ) -> None:
         """
         Args:
@@ -47,12 +48,8 @@ class ExpectedValueQLayer(QLayer):
     def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
         out_distribution = super().forward(input_tensor)
 
-        def make_vals(l):
-            return torch.tensor(
-                list(range(l)),
-                dtype=out_distribution.dtype,
-                requires_grad=out_distribution.requires_grad
-            )
+        def make_vals(range_max):
+            return torch.tensor(list(range(range_max)), dtype=out_distribution.dtype, requires_grad=out_distribution.requires_grad)
 
         # Unbatched input
         if len(out_distribution.shape) == 1:

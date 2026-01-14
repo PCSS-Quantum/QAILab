@@ -1,6 +1,6 @@
-""" Package with QLauncher objects. """
-from .passes import ForwardPass, BackwardPass
-from .problem import CircuitProblem
-from .formatter import circuit_formatter
+"""Package with QLauncher objects."""
 
-__all__ = ['ForwardPass', 'BackwardPass', 'CircuitProblem']
+from .passes import BackwardPass, ForwardPass
+from .problem import NNCircuit
+
+__all__ = ["ForwardPass", "BackwardPass", "NNCircuit"]

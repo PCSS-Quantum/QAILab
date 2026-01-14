@@ -1,4 +1,5 @@
 """ Forward and backward pass algorithm implementation in qlauncher. """
-from .forward import ForwardPass
 from .backward import BackwardPass
+from .forward import ForwardPass
+
 __all__ = ['ForwardPass', 'BackwardPass']

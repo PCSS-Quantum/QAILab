@@ -1,19 +1,20 @@
 """ Module with QModel """
 from collections.abc import Callable
 from typing import Literal
-from sklearn.base import BaseEstimator
+
+import numpy as np
+import pandas as pd
 import torch
-from torch import Tensor, optim, nn
+from sklearn.base import BaseEstimator
+from torch import Tensor, nn, optim
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from tqdm import tqdm
-import numpy as np
-import pandas as pd
 
 try:
     from ptseries.optimizers import HybridOptimizer
 except ImportError:
-    class HybridOptimizer():
+    class HybridOptimizer:
         """Dummy HO"""
         # pylint: disable=too-few-public-methods
 

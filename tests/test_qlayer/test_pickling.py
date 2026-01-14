@@ -1,6 +1,5 @@
 """ Test whether the test is picklable. """
 import pickle
-import pytest
 import torch
 import qiskit.circuit
 from qailab.torch import QLayer
