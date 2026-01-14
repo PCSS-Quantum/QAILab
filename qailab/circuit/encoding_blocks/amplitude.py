@@ -1,6 +1,7 @@
 """Blocks encoding values as initial state for a quantum circuit"""
 from typing import Literal
-from qiskit.circuit import QuantumCircuit, ParameterVector
+
+from qiskit.circuit import ParameterVector, QuantumCircuit
 from qiskit_machine_learning.circuit.library import RawFeatureVector
 
 from qailab.circuit.base import EncodingBlock, NonGateBlock

@@ -4,8 +4,8 @@ from collections.abc import Sequence
 from qiskit import QuantumCircuit
 from qiskit.circuit.quantumcircuit import QubitSpecifier
 
-from qailab.circuit.measurement import MeasurementBlock
 from qailab.circuit.base import CircuitBlock
+from qailab.circuit.measurement import MeasurementBlock
 
 
 def build_circuit(

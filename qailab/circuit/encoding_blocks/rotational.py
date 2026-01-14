@@ -1,6 +1,6 @@
 """R-gate implementations of input vector encoding blocks for variational circuits."""
-from typing import Literal
 from collections.abc import Callable
+from typing import Literal
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes

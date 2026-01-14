@@ -1,6 +1,12 @@
-""" Utility functions """
+"""Utility functions"""
+
 import itertools
+
 import numpy as np
+
+
+def bitstring_to_bit_tuple(bitstring: str) -> tuple[int, ...]:
+    return tuple(int(c) for c in bitstring)
 
 
 def number_to_bit_tuple(number: int, size: int) -> tuple[int, ...]:
@@ -29,5 +35,5 @@ def distribution_to_array(distribution: dict[tuple[int, ...], float]) -> np.ndar
     size = len(next(iter(distribution.keys())))
     array = np.zeros((2**size,))
     for ind, combination in enumerate(itertools.product((0, 1), repeat=size)):
-        array[ind] = distribution[combination]
+        array[ind] = distribution.get(combination, 0.0)
     return array
